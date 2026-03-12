@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth/auth-form-base.css') }}">
+    {% block head_inner %} {% endblock %}
+{% endblock %}
+
+
+
+{% block content %}
+    <div class="form-container-container">
+            
+        {% set messages = get_flashed_messages() %}
+        {% if messages %}
+            {% set display = 'block' %}
+            {% set message = messages[0] %}
+        {% else %}
+            {% set display = 'none' %}
+            {% set message = '' %}
+        {% endif %}
+        
+        <div id="notif" style="display: {{display}};">
+            <div class="error">
+                <div class="error__icon">
+                    <img src="{{ url_for('static', filename='assets/error-icon.svg') }}" alt="error">
+                </div>
+                <div class="error__title" id="notif-text">{{message}}</div>
+            </div>
+        </div>
+        
+        
+        <div class="form-container">
+            <p class="title">{% block login_or_signup_title %} {% endblock %}</p>
+
+            {% block form_content %} {% endblock %}
+
+            <div class="social-icons">
+                <a href="{{ url_for('google.login') }}" style="text-decoration: none;">
+                    <button class="google-sign">
+                        <img src="{{ url_for('static', filename='assets/google.svg') }}" alt="google">Continue with Google
+                    </button>
+                </a>
+            </div>
+
+            <br>
+
+            <p class="signup">
+                {% block already_login_or_signup_text %} {% endblock %}
+            </p>
+        </div>
+    </div>
+{% endblock %}

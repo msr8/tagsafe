@@ -1,0 +1,57 @@
+{% extends "auth/auth-form-base.html" %}
+
+
+{% block title %}Login{% endblock %}
+
+
+{% block head_inner %}
+    <link rel="stylesheet" href="{{ url_for('static',filename='auth/login.css') }}">
+    <script src="{{ url_for('static',filename='auth/signup.js') }}" defer></script>
+{% endblock %}
+
+
+{% block login_or_signup_title %}Signup{% endblock %}
+
+
+
+{% block form_content %}
+    <form onsubmit="signup(); return false;" class="form">
+        
+        <div class="flex-column">
+            <label>Email</label>
+        </div>
+        <div class="inputForm">
+            <img src="{{ url_for('static', filename='assets/email-icon.svg') }}" alt="email">
+            <input id="email-input" placeholder="Enter your Email" class="input"
+                type="text">
+        </div>
+
+        <div class="flex-column">
+            <label>Username</label>
+        </div>
+        <div class="inputForm">
+            <img src="{{ url_for('static', filename='assets/email-icon.svg') }}" alt="email">
+            <input id="username-input" placeholder="Enter your Username" class="input"
+                type="text">
+        </div>
+
+        <div class="flex-column">
+            <label>Password </label>
+        </div>
+        <div class="inputForm">
+            <img src="{{ url_for('static', filename='assets/password-icon.svg') }}" alt="email">
+            <input id="password-input" placeholder="Enter your Password" class="input" type="password">
+        </div>
+
+        <br>
+
+        <button class="sign" type="submit">Signup</button>
+    </form>
+{% endblock %}
+
+
+
+{% block already_login_or_signup_text %} 
+    Already have an account?
+    <a rel="noopener noreferrer" href="{{ url_for('auth.page_login') }}" class="">Log in</a>
+{% endblock %}

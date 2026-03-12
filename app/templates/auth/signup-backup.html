@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+
+{% block title %}Signup{% endblock %}
+
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static',filename='auth/signup.css') }}">
+    <script src="{{ url_for('static',filename='auth/signup.js') }}" defer></script>
+{% endblock %}
+
+
+
+{% block content %}
+    <div class="form-container-container">
+
+        {% set messages = get_flashed_messages() %}
+        {% if messages %}
+            {% set display = 'block' %}
+            {% set message = messages[0] %}
+        {% else %}
+            {% set display = 'none' %}
+            {% set message = '' %}
+        {% endif %}
+
+        <div id="notif" style="display: {{display}};">
+            <div class="error">
+                <div class="error__icon">
+                    <img src="{{ url_for('static', filename='assets/error-icon.svg') }}" alt="error">
+                </div>
+                <div class="error__title" id="notif-text">{{message}}</div>
+            </div>
+        </div>
+
+
+        <div class="form-container">
+            <p class="title">Signup</p>
+            <form onsubmit="signup(); return false;" class="form">
+                
+                <div class="flex-column">
+                    <label>Email</label>
+                </div>
+                <div class="inputForm">
+                    <img src="{{ url_for('static', filename='assets/email-icon.svg') }}" alt="email">
+                    <input id="email-input" placeholder="Enter your Email" class="input"
+                        type="text">
+                </div>
+
+                <div class="flex-column">
+                    <label>Username</label>
+                </div>
+                <div class="inputForm">
+                    <img src="{{ url_for('static', filename='assets/email-icon.svg') }}" alt="email">
+                    <input id="username-input" placeholder="Enter your Username" class="input"
+                        type="text">
+                </div>
+
+                <div class="flex-column">
+                    <label>Password </label>
+                </div>
+                <div class="inputForm">
+                    <img src="{{ url_for('static', filename='assets/password-icon.svg') }}" alt="email">
+                    <input id="password-input" placeholder="Enter your Password" class="input" type="password">
+                </div>
+
+                <br>
+
+                <button class="sign" type="submit">Signup</button>
+            </form>
+
+            <div class="social-icons">
+                <a href="{{ url_for('google.login') }}" style="text-decoration: none;">
+                    <button class="google-sign">
+                        <img src="{{ url_for('static', filename='assets/google.svg') }}" alt="google">Continue with Google
+                    </button>
+                </a>
+            </div>
+
+            <br>
+
+            <p class="signup">Already have an account?
+                <a rel="noopener noreferrer" href="{{ url_for('auth.page_login') }}" class="">Log in</a>
+            </p>
+        </div>
+    </div>
+{% endblock %}

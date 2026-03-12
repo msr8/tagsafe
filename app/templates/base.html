@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
+    <title>{% block title %} {% endblock %}</title>
+    {% block head %} {% endblock %}
+</head>
+
+
+
+<body>
+    
+    <div id="navbar">
+        <div id="navbar-links">
+            <a href="{{ url_for('root.page_index') }}">Home</a>
+        </div>
+
+        <div id="profile">
+            {% if session.get('logged_in') %}
+                <a href="{{ url_for('root.page_dashboard') }}">Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('auth.page_login') }}">Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    
+    <div id="content-container">
+        {% block content %} {% endblock %}
+    </div>
+
+</body>
+
+
+
+</html>

@@ -1,0 +1,30 @@
+:root {
+    --body-padding: 8px;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    /* Removing but simulating the default 8px margin on body that most browsers have */
+    margin: 0;
+    padding: var(--body-padding);
+    /* Making the body take up all veiw space */
+    height: calc(100% - var(--body-padding)*2 );
+    /* Making it so that #content-container can take up all space except navbar */
+    display: flex;
+    flex-direction: column;
+}
+
+
+#navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Making it so that #content-container can take up all space except navbar */
+#content-container {
+    flex: 1;
+}
