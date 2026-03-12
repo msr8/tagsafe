@@ -1,0 +1,73 @@
+{
+        "Golang errors": {},
+        "Issues": [
+                {
+                        "severity": "MEDIUM",
+                        "confidence": "HIGH",
+                        "cwe": {
+                                "id": "676",
+                                "url": "https://cwe.mitre.org/data/definitions/676.html"
+                        },
+                        "rule_id": "G114",
+                        "details": "Use of net/http serve function that has no support for setting timeouts",
+                        "file": "C:\\Users\\Shashwat\\repos\\example\\template\\main.go",
+                        "code": "22: \thttp.HandleFunc(\"/image/\", imageHandler)\n23: \tlog.Fatal(http.ListenAndServe(\"localhost:8080\", nil))\n24: }\n",
+                        "line": "23",
+                        "column": "12",
+                        "nosec": false,
+                        "suppressions": null
+                },
+                {
+                        "severity": "MEDIUM",
+                        "confidence": "HIGH",
+                        "cwe": {
+                                "id": "22",
+                                "url": "https://cwe.mitre.org/data/definitions/22.html"
+                        },
+                        "rule_id": "G304",
+                        "details": "Potential file inclusion via variable",
+                        "file": "C:\\Users\\Shashwat\\repos\\example\\internal\\cmd\\weave\\weave.go",
+                        "code": "200: func include(file, tag string) (string, error) {\n201: \tf, err := os.Open(file)\n202: \tif err != nil {\n",
+                        "line": "201",
+                        "column": "12",
+                        "nosec": false,
+                        "suppressions": null
+                },
+                {
+                        "severity": "LOW",
+                        "confidence": "HIGH",
+                        "cwe": null,
+                        "rule_id": "G706",
+                        "details": "Log injection via taint analysis",
+                        "file": "C:\\Users\\Shashwat\\repos\\example\\gotypes\\doc\\main.go",
+                        "code": "37: \tif obj == nil {\n38: \t\tlog.Fatalf(\"%s.%s not found\", pkg.Types.Path(), name)\n39: \t}\n",
+                        "line": "38",
+                        "column": "13",
+                        "nosec": false,
+                        "suppressions": null
+                },
+                {
+                        "severity": "LOW",
+                        "confidence": "HIGH",
+                        "cwe": {
+                                "id": "703",
+                                "url": "https://cwe.mitre.org/data/definitions/703.html"
+                        },
+                        "rule_id": "G104",
+                        "details": "Errors unhandled",
+                        "file": "C:\\Users\\Shashwat\\repos\\example\\gotypes\\typeandvalue\\main.go",
+                        "code": "62: \tvar buf bytes.Buffer\n63: \tformat.Node(\u0026buf, fset, n)\n64: \treturn buf.String()\n",
+                        "line": "63",
+                        "column": "2",
+                        "nosec": false,
+                        "suppressions": null
+                }
+        ],
+        "Stats": {
+                "files": 18,
+                "lines": 1875,
+                "nosec": 0,
+                "found": 4
+        },
+        "GosecVersion": "dev"
+}
