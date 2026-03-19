@@ -1,0 +1,9 @@
+dotenv
+flask
+flask-restful
+flask-dance
+flask-sqlalchemy
+flask-session
+sty
+requests
+bcrypt

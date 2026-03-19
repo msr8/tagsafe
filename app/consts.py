@@ -3,9 +3,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-LOGIN_FAIL_REDIRECT  = 'google.login'
+LOGIN_FAIL_REDIRECT  = 'github.login'
 POST_LOGIN_REDIRECT  = 'root.page_dashboard'
 POST_LOGOUT_REDIRECT = 'root.page_index'
 
-GOOGLE_CLIENT_ID     = environ.get('GOOGLE_CLIENT_ID')
-GOOGLE_CLIENT_SECRET = environ.get('GOOGLE_CLIENT_SECRET')
+# GOOGLE_CLIENT_ID     = environ.get('GOOGLE_CLIENT_ID')
+# GOOGLE_CLIENT_SECRET = environ.get('GOOGLE_CLIENT_SECRET')
+GITHUB_CLIENT_ID     = environ.get('GITHUB_CLIENT_ID')
+GITHUB_CLIENT_SECRET = environ.get('GITHUB_CLIENT_SECRET')
+GITHUB_APP_NAME     = environ.get('GITHUB_APP_NAME')

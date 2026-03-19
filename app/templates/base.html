@@ -21,7 +21,7 @@
             {% if session.get('logged_in') %}
                 <a href="{{ url_for('root.page_dashboard') }}">Dashboard</a>
             {% else %}
-                <a href="{{ url_for('auth.page_login') }}">Login</a>
+                <a href="{{ url_for('github.login') }}">Login</a>
             {% endif %}
         </div>
     </div>

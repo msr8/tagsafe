@@ -35,7 +35,7 @@ class Usernames(db.Model):
 class Finding(db.Model):
     __tablename__ = "findings"
     id = db.Column(db.Integer, primary_key=True)
-    scan_run_id = db.Column(db.Integer, db.ForeignKey("scan_runs.id"), nullable=False)
+    # scan_run_id = db.Column(db.Integer, db.ForeignKey("scan_runs.id"), nullable=False)
     tool = db.Column(db.String(64))             # bandit | gosec | nodejsscan | cppcheck | semgrep
     rule_id = db.Column(db.String(128))
     severity = db.Column(db.String(32))         # CRITICAL | HIGH | MEDIUM | LOW | INFO
@@ -48,6 +48,6 @@ class Finding(db.Model):
     cwe = db.Column(db.String(64))
     owasp = db.Column(db.String(128))
 
-    scan_run = db.relationship("ScanRun", back_populates="findings")
+    # scan_run = db.relationship("ScanRun", back_populates="findings")
 
 

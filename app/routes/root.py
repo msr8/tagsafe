@@ -1,4 +1,4 @@
-from app.consts import *
+from app.consts import GITHUB_APP_NAME
 from app.utils  import login_required
 
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request, send_from_directory
@@ -25,6 +25,13 @@ def page_index():
 
 
 
+@root_bp.route('/dashboard')
+@login_required() # ALWAYS remember to keep login_required() below the route decorator, otherwise it will not work (idfk why)
+def page_dashboard():
+    return render_template('dashboard.html', github_app_name=GITHUB_APP_NAME)
+
+
+
 
 class TestAPI(Resource):
     def get(self):
@@ -43,13 +50,12 @@ class TestAPI(Resource):
 
 @root_bp.route('/session')
 def page_session():
-    return f'<pre>{dumps(session, indent=4)}</pre>'
+    # TypeError: Object of type SqlAlchemySession is not JSON serializable
+    return f'<pre>{dumps(dict(session), indent=4)}</pre>'
+    # print(session.keys())
+    # print(session['logged_in    '])
+    # return str(session)
     
 
 
 
-
-# @root_bp.route('/dashboard')
-# @login_required() # ALWAYS remember to keep login_required() below the route decorator, otherwise it will not work (idfk why)
-# def page_dashboard():
-#     return render_template('dashboard.html')
