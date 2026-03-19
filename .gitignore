@@ -1,5 +1,6 @@
 flask_session
 .vscode
+app/scanners/examples/
 
 
 
