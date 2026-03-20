@@ -7,3 +7,7 @@ flask-session
 sty
 requests
 bcrypt
+pyjwt
+cryptography
+
+rich

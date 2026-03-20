@@ -6,6 +6,9 @@ from flask import request, session, redirect, url_for, flash, get_flashed_messag
 
 from functools import wraps
 from re import match
+import time
+import jwt
+import requests as rq
 
 
 
@@ -40,3 +43,29 @@ def check_email(to_check:str) -> bool:
 def check_google_signup(email:str) -> bool:
     user = db.session.get(User, session['email'])    
     return user and (user.password is None)
+
+
+def get_installation_token(installation_id):
+    '''Generates a fresh token for the specific repo that triggered the webhook'''
+    with open(GITHUB_KEY_PATH, 'rb') as key_file:
+        private_key = key_file.read()
+
+    payload = {
+        'iat': int(time.time()) - 60,
+        'exp': int(time.time()) + (60 * 10),
+        'iss': GITHUB_CLIENT_ID
+    }
+    
+    encoded_jwt = jwt.encode(payload, private_key, algorithm='RS256')
+    url = f'https://api.github.com/app/installations/{installation_id}/access_tokens'
+    
+    headers = {
+        'Authorization': f'Bearer {encoded_jwt}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+
+    resp = rq.post(url, headers=headers)
+    if not resp.ok:
+        print(f'Token error: {resp.text}')
+        return None
+    return resp.json()['token']

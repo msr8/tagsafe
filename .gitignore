@@ -1,6 +1,9 @@
 flask_session
 .vscode
 app/scanners/examples/
+github-private-key*.pem
+test.json
+temp.json
 
 
 

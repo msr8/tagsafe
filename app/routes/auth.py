@@ -37,7 +37,8 @@ def page_github_authorised():
     session['logged_in'] = True
     session['username']  = resp['login']
 
-    return resp
+    # return resp
+    return redirect( session.pop('redirect_to', url_for(POST_LOGIN_REDIRECT)) )
 
 
 

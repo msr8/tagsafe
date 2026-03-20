@@ -1,4 +1,6 @@
 from app.extensions import db
+from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.dialects.postgresql import JSON
 # https://www.digitalocean.com/community/tutorials/how-to-use-one-to-many-database-relationships-with-flask-sqlalchemy
 
 
@@ -32,22 +34,23 @@ class Usernames(db.Model):
 
 
 
+class Installation(db.Model):
+    __tablename__ = 'installations'
+
+    installation_id   = db.Column(db.BigInteger, nullable=False, primary_key=True)
+    issuer_username   = db.Column(db.String(255), nullable=False)
+    issuer_pfp        = db.Column(db.String(512), nullable=True)
+    repos             = db.Column(MutableList.as_mutable(JSON), nullable=True) # [repo-dicts]
+    # last_repos_update = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
+    created_at        = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
+    is_active         = db.Column(db.Boolean, nullable=False, default=True)
+
+
+
 class Finding(db.Model):
     __tablename__ = "findings"
-<<<<<<< Updated upstream
-    id = db.Column(db.Integer, primary_key=True)
-    # scan_run_id = db.Column(db.Integer, db.ForeignKey("scan_runs.id"), nullable=False)
-    tool = db.Column(db.String(64))             # bandit | gosec | nodejsscan | cppcheck | semgrep
-    rule_id = db.Column(db.String(128))
-    severity = db.Column(db.String(32))         # CRITICAL | HIGH | MEDIUM | LOW | INFO
-    confidence = db.Column(db.String(32))
-    file_path = db.Column(db.String(512))
-    line_start = db.Column(db.Integer)
-    line_end = db.Column(db.Integer)
-    message = db.Column(db.Text)
-=======
     id           = db.Column(db.Integer, primary_key=True)
-    scan_run_id  = db.Column(db.Integer, db.ForeignKey("scan_runs.id"), nullable=False)
+    commit       = db.Column(db.Integer, db.ForeignKey('commits.id'), nullable=False)
     tool         = db.Column(db.String(64))             # bandit | gosec | nodejsscan | cppcheck | semgrep
     rule_id      = db.Column(db.String(128), nullable=True)
     severity     = db.Column(db.String(32))         # CRITICAL | HIGH | MEDIUM | LOW | WARNING | INFO 
@@ -56,11 +59,27 @@ class Finding(db.Model):
     line_start   = db.Column(db.Integer,     nullable=True)
     line_end     = db.Column(db.Integer,     nullable=True)
     message      = db.Column(db.Text)
->>>>>>> Stashed changes
     code_snippet = db.Column(db.Text)
     cwe          = db.Column(db.String(64),  nullable=True)
     owasp        = db.Column(db.String(128), nullable=True)
 
+
+class Commit(db.Model):
+    __tablename__ = "commits"
+    id              = db.Column(db.Integer, primary_key=True)
+    repo_id         = db.Column(db.BigInteger, nullable=False)
+    author_email    = db.Column(db.String(255), nullable=False)
+    author_name     = db.Column(db.String(255), nullable=False)
+    author_username = db.Column(db.String(255), nullable=True)
+    message         = db.Column(db.Text, nullable=False)
+    url             = db.Column(db.String(512), nullable=False)
+    timestamp       = db.Column(db.DateTime, nullable=False)
+    installation    = db.Column(db.BigInteger, db.ForeignKey('installations.installation_id'), nullable=False)
+    findings        = db.relationship('Finding', backref='commit', cascade='all, delete-orphan')
+
     # scan_run = db.relationship("ScanRun", back_populates="findings")
+
+
+
 
 
