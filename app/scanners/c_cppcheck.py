@@ -1,7 +1,8 @@
-from app.models import Finding
-import xml.etree.ElementTree as ET
-from .common import run_cmd
+from app.models          import Finding
+from app.scanners.common import run_cmd
 
+import xml.etree.ElementTree as ET
+import tempfile
 
 
 def get_code_snippet(locs) -> str:
@@ -46,14 +47,16 @@ def get_code_snippet(locs) -> str:
 
 
 
-def run(repo_path: str, scan_id: int) -> list[Finding]:
+def run(repo_path: str, commit_sha: str) -> list[Finding]:
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        output_path = tmp_file.name
     findings = []
     out, _, _ = run_cmd(
-        ['cppcheck', '--enable=all', '--output-file=/tmp/cppcheck_out.xml', '--output-format=xmlv3', '--quiet', '-suppress=ctuOneDefinitionRuleViolation', '.'],
+        ['cppcheck', '--enable=all', '--output-file=' + output_path, '--output-format=xmlv3', '--quiet', '-suppress=ctuOneDefinitionRuleViolation', '.'],
         cwd=repo_path,
     )
     try:
-        tree = ET.parse('/tmp/cppcheck_out.xml')
+        tree = ET.parse(output_path)
         root = tree.getroot()
     except Exception:
         return findings
@@ -72,7 +75,7 @@ def run(repo_path: str, scan_id: int) -> list[Finding]:
         }
 
         f = Finding(
-            scan_run_id  = scan_id,
+            commit_sha   = commit_sha,
             tool         = 'cppcheck',
             rule_id      = error.get('id'),
             severity     = severity_map.get(severity_raw, 'INFO'),

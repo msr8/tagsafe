@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import tempfile
 
 def run_cmd(cmd, cwd, timeout=300):
     result = subprocess.run(
@@ -29,4 +30,7 @@ SEVERITY_MAP = {
 
 def normalize_severity(raw: str) -> str:
     return SEVERITY_MAP.get((raw or '').lower(), 'INFO')
+
+def get_temp_path():
+    return tempfile.mkdtemp(prefix='scan_')
 

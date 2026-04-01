@@ -3,3 +3,4 @@ Gosec:      go install github.com/securego/gosec/v2/cmd/gosec@latest
 CppCheck:   sudo dnf install cppcheck
 Semgrep:    pip install semgrep
 NodeJSScan: python3.13 -m pip install njsscan
+Gaurddog:    pip install guarddog

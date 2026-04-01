@@ -4,7 +4,8 @@ app/scanners/examples/
 github-private-key*.pem
 test.json
 temp.json
-
+modified_files_*
+repo/
 
 
 
