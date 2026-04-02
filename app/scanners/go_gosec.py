@@ -2,7 +2,7 @@ from app.models import Finding
 import json
 from .common import run_cmd, normalize_severity
 
-def run(repo_path: str, commit_sha: str) -> list[Finding]:
+def run(repo_path: str) -> list[Finding]:
     findings = []
     out, _, _ = run_cmd(
         ['gosec', '-fmt=json', '-quiet', './...'],
@@ -15,7 +15,6 @@ def run(repo_path: str, commit_sha: str) -> list[Finding]:
 
     for issue in data.get('Issues', []):
         f = Finding(
-            commit_sha   = commit_sha,
             tool         = 'gosec',
             rule_id      = issue.get('rule_id'),
             severity     = normalize_severity(issue.get('severity', '')),

@@ -47,7 +47,7 @@ def get_code_snippet(locs) -> str:
 
 
 
-def run(repo_path: str, commit_sha: str) -> list[Finding]:
+def run(repo_path: str) -> list[Finding]:
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
         output_path = tmp_file.name
     findings = []
@@ -75,7 +75,6 @@ def run(repo_path: str, commit_sha: str) -> list[Finding]:
         }
 
         f = Finding(
-            commit_sha   = commit_sha,
             tool         = 'cppcheck',
             rule_id      = error.get('id'),
             severity     = severity_map.get(severity_raw, 'INFO'),

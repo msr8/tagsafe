@@ -9,6 +9,7 @@ from re import match
 import time
 import jwt
 import requests as rq
+from loguru import logger
 
 
 
@@ -66,7 +67,6 @@ def get_installation_token(installation_id):
 
     resp = rq.post(url, headers=headers)
     if not resp.ok:
-        from loguru import logger
         logger.error(f'Token error: {resp.text}')
         return None
     return resp.json()['token']

@@ -1,5 +1,6 @@
 flask_session
 .vscode
+
 app/scanners/examples/
 github-private-key*.pem
 test.json
@@ -7,6 +8,8 @@ temp.json
 modified_files_*
 repo/
 after-authorisation.json
+pr_payload.json
+changed_files.json
 
 
 

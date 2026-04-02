@@ -1,8 +1,8 @@
 from app.consts     import GITHUB_APP_NAME, GITHUB_CLIENT_ID, GITHUB_KEY_PATH
 from app.utils      import login_required, get_installation_token
-from app.models     import Installation, Commit
+from app.models     import Installation, Commit, PullRequest
 from app.extensions import db
-from app.scanners   import scan
+from app.scanners   import pr_scan, commit_scan
 from loguru         import logger
 
 from flask import Blueprint, app, render_template, session, redirect, url_for, flash, request, send_from_directory, jsonify
@@ -27,8 +27,8 @@ def github_webhook():
     event_type = request.headers.get('X-GitHub-Event')
     payload    = request.json
     # inspect(payload)
-    with open('test.json', 'w') as f:
-        f.write(dumps(payload, indent=4))
+    # with open('test.json', 'w') as f:
+    #     f.write(dumps(payload, indent=4))
 
     if event_type == 'ping':
         logger.info('Webhook connected successfully!')
@@ -37,6 +37,7 @@ def github_webhook():
 
     if event_type == 'installation':
         if payload.get('action') == 'created':
+            if db.session.get(Installation, payload['installation']['id']): return jsonify({'status': 'installation already exists'}), 200
             obj = Installation(
                 installation_id = payload['installation']['id'],
                 issuer_username = payload['sender']['login'],
@@ -90,12 +91,10 @@ def github_webhook():
         repo_name       = payload['repository']['full_name']
         pusher          = payload['pusher']['name']
         
-        logger.info(f'\\n[!] ALERT: {pusher} just pushed code to {repo_name}')
+        logger.info(f'[!] ALERT: {pusher} just pushed code to {repo_name}')
         
         # Get our bot's master key for this repo
-        logger.info('Generating access token...')
         token = get_installation_token(installation_id)
-        if not token: return jsonify({'status': 'token acquisition failed'}), 500
         logger.info('Token acquired! Fetching commit details...')
         
         # Get the commits URL
@@ -137,7 +136,7 @@ def github_webhook():
         # db.session.commit()
 
         commit = commit_objs[-1]
-        scan(commit, token, payload)
+        commit_scan(commit, token, payload)
 
             # # -----> Scanning stuff <-----
             # # Looping through the commits from latest to oldest to get the LISTS of commits which changed stuff
@@ -164,68 +163,44 @@ def github_webhook():
             #         if file['status'] == 'modified':
             #             changed_files[fn] = file
 
-
-
-                
-                # ---> THIS IS WHERE YOUR SAST SCRIPT WILL GO <---
                 
         return jsonify({'status': 'push processed'}), 200
     
 
     # Pull Request
     elif event_type == 'pull_request':
-        action = payload.get('action')
-        
-        # We only want to run analysis when new code is introduced
-        if action in ['opened', 'synchronize']:
-            installation_id = payload['installation']['id']
-            repo_owner = payload['repository']['owner']['login']
-            repo_name = payload['repository']['name']
-            pr_number = payload['pull_request']['number']
-            
-            logger.info(f'\\n[!] ALERT: PR #{pr_number} was {action} in {repo_owner}/{repo_name}')
-            
-            # 1. Wake up the bot and get the token
-            logger.info('Generating access token...')
-            token = get_installation_token(installation_id)
-            
-            if token:
-                # 2. Ask GitHub for the list of files changed in this specific PR
-                files_url = f'https://api.github.com/repos/{repo_owner}/{repo_name}/pulls/{pr_number}/files'
-                auth_headers = {
-                    'Authorization': f'Bearer {token}',
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-                
-                files_resp = rq.get(files_url, headers=auth_headers)
-                
-                if files_resp.ok:
-                    changed_files = files_resp.json()
-                    logger.success(f'SUCCESS! Found {len(changed_files)} changed files to analyze.')
-                    
-                    # 3. Loop through the files to get the code
-                    for file in changed_files:
-                        filename = file['filename']
-                        status = file['status'] # e.g., 'added', 'modified', 'removed'
-                        
-                        # We don't need to scan deleted files
-                        if status != 'removed':
-                            # 'raw_url' gives you the direct link to download the full, updated file text
-                            raw_file_url = file.get('raw_url')
-                            logger.info(f' - Fetching and scanning: {filename}')  
-                            
-                            # ---> YOUR SAST ENGINE GOES HERE <---
-                            # You would do: raw_code = rq.get(raw_file_url, headers=auth_headers).text
-                            # And then pass 'raw_code' into your security analysis script.
-                            
-                else: logger.error(f'Failed to fetch PR files: {files_resp.text}')
-                    
-            return jsonify({'status': 'pr processed'}), 200
-            
-        else:
-            # We ignore things like 'labeled', 'closed', 'assigned'
-            logger.debug(f'Ignored PR action: {action}')
+        if not payload.get('action') in ['opened', 'synchronize']: 
+            logger.debug(f'Ignored PR action: {payload.get("action")}')
             return jsonify({'status': 'ignored action'}), 200
+        with open('pr_payload.json', 'w') as f:
+            f.write(dumps(payload, indent=4))
+        
+        logger.info(f'[!] ALERT: PR #{payload["number"]} was {payload["action"]} in {payload["repository"]["full_name"]}')
+
+        # If new PR, make a new PR object in our DB
+        # if payload['action'] == 'opened':
+        pr_obj = db.session.get(PullRequest, payload['pull_request']['id'])
+        if not pr_obj:
+            pr_obj = PullRequest(
+                pr_id           = payload['pull_request']['id'],
+                repo_id         = payload['repository']['id'], # Since repo id is not present in `pull_request`
+                author_email    = payload['pull_request']['user']['email'] if payload['pull_request']['user'].get('email') else None,
+                author_name     = payload['pull_request']['user']['name']  if payload['pull_request']['user'].get('name') else None,
+                author_username = payload['pull_request']['user']['login'],
+                title           = payload['pull_request']['title'],
+                description     = payload['pull_request']['body'],
+                html_url        = payload['pull_request']['html_url'],
+                api_url         = payload['pull_request']['url'],
+                timestamp       = dt.datetime.strptime(payload['pull_request']['created_at'], '%Y-%m-%dT%H:%M:%SZ'),
+                installation_id = payload['installation']['id']
+            )
+            db.session.add(pr_obj)
+            db.session.commit()
+
+        # Run the scanner on this PR
+        token = get_installation_token(payload['installation']['id'])
+        pr_scan(pr_obj, token, payload)
+
 
     return jsonify({'status': 'ignored'}), 200
     

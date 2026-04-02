@@ -13,7 +13,7 @@ def get_code_snippet(file_path:str, line_start:int, line_end:int) -> str:
     return snippet
 
 
-def run(repo_path: str, commit_sha: str) -> list[Finding]:
+def run(repo_path: str) -> list[Finding]:
     findings = []
     out, _, _ = run_cmd(
         ['semgrep', 'scan', '--config=auto', '--json-output=/tmp/semgrep.json', '--quiet', '.'],
@@ -26,7 +26,6 @@ def run(repo_path: str, commit_sha: str) -> list[Finding]:
     for result in data.get('results', []):
         meta = result.get('extra', {}).get('metadata', {})
         f = Finding(
-            commit_sha   = commit_sha,
             tool         = 'semgrep',
             rule_id      = result.get('check_id', ''),
             severity     = normalize_severity(result.get('extra', {}).get('severity', '')),

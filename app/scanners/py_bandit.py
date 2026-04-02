@@ -4,18 +4,17 @@ import json
 from .common import run_cmd, normalize_severity
 from loguru import logger
 
-def run(repo_path: str, commit_sha: str) -> list[Finding]:
+def run(repo_path: str) -> list[Finding]:
     findings = []
     out, _, _ = run_cmd(
         ['bandit', '-r', '.', '-f', 'json', '-q'],
         cwd=repo_path,
     )
     try: data = json.loads(out)
-    except json.JSONDecodeError: return
+    except json.JSONDecodeError: return []
 
     for result in data.get('results', []):
         f = Finding(
-            commit_sha   = commit_sha,
             tool         = 'bandit',
             rule_id      = result.get('test_id'),
             severity     = normalize_severity(result.get('issue_severity', '')),
@@ -28,10 +27,7 @@ def run(repo_path: str, commit_sha: str) -> list[Finding]:
             cwe          = result.get('issue_cwe', {}).get('id', ''),
         )
         findings.append(f)
-    logger.debug(f'Scan data: {data}')
-    logger.debug(f'Findings: {findings}')
-    db.session.add_all(findings)
-    db.session.commit()
+    return findings
 
 
 

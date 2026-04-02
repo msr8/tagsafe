@@ -1,6 +1,6 @@
 from app.models     import *
 from app.consts     import *
-from app.utils      import login_required, check_email, check_google_signup
+from app.utils      import get_installation_token, login_required, check_email, check_google_signup
 from app.extensions import db
 
 from flask import Blueprint, redirect, url_for, session, render_template, request, flash
@@ -9,6 +9,8 @@ from flask_dance.contrib.google import google
 from flask_dance.contrib.github import github
 from oauthlib.oauth2.rfc6749.errors import TokenExpiredError
 
+import requests as rq
+from loguru import logger
 from bcrypt import hashpw, gensalt, checkpw
 import rich
 
@@ -44,11 +46,34 @@ def page_github_authorised():
     with open('after-authorisation.json', 'w') as f:
         import json
         json.dump(resp, f, indent=4)
+    
+    # If first time logging in, add this user to the database
     if not db.session.get(User, resp['id']):
         user = User(user_id=resp['id'], username=resp['login'], pfp_url=resp['avatar_url'])
         db.session.add(user)
-        db.session.commit()
+    
+    # Update all installations of this user with the latest username and pfp_url. Also the latest repos for each installation (in case user has authorised new repos since last login). Also get new installations
+    for inst in github.get('/user/installations').json().get('installations', []):
+        existing_inst = db.session.get(Installation, inst['id'])
+        if not existing_inst:
+            existing_inst = Installation(
+                installation_id = inst['id'],
+                issuer_username = resp['login'],
+                issuer_pfp_url  = resp['avatar_url'],
+                user_id         = resp['id']
+            )
+            db.session.add(existing_inst)
+        existing_inst.issuer_username = resp['login']
+        existing_inst.issuer_pfp_url  = resp['avatar_url']
+        token = get_installation_token(existing_inst.installation_id)
+        auth_headers = {
+            'Authorization': f'Bearer {token}',
+            'Accept': 'application/vnd.github.v3+json'
+        }
+        repos_resp = rq.get(f'https://api.github.com/installation/repositories', headers=auth_headers)
+        existing_inst.repos = repos_resp.json().get('repositories', [])
 
+    db.session.commit()
     # return resp
     return redirect( session.pop('redirect_to', url_for(POST_LOGIN_REDIRECT)) )
 

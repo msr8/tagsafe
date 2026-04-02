@@ -4,7 +4,7 @@ import tempfile
 import json
 
 
-def run(repo_path: str, commit_sha: str) -> list[Finding]:
+def run(repo_path: str) -> list[Finding]:
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
         output_path = tmp_file.name
         findings = []
@@ -22,7 +22,6 @@ def run(repo_path: str, commit_sha: str) -> list[Finding]:
                     metadata = issue.get('metadata', {})
                     for file_info in issue.get('files', []):
                         f = Finding(
-                            commit_sha   = commit_sha,
                             tool         = 'nodejsscan',
                             rule_id      = title,
                             severity     = normalize_severity(metadata.get('level', 'MEDIUM')),

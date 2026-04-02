@@ -34,6 +34,8 @@ class Installation(db.Model):
     is_active         = db.Column(db.Boolean, nullable=False, default=True)
     # Foreign Key linking back to User
     user_id           = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    # One Installation has Many Commits
+    commits           = db.relationship('Commit', backref='installation', lazy=True, cascade='all, delete-orphan')
 
 
 
@@ -71,7 +73,7 @@ class Commit(db.Model):
     to_scan         = db.Column(db.Boolean,      nullable=False, default=False)
     fully_scanned   = db.Column(db.Boolean,      nullable=False, default=False)
     # One Commit has Many Findings
-    findings        = db.relationship('Finding', backref='commit', cascade='all, delete-orphan')
+    findings        = db.relationship('Finding', backref='commit', lazy=True, cascade='all, delete-orphan')
 
 
 
@@ -79,18 +81,17 @@ class PullRequest(db.Model):
     __tablename__ = 'pull_requests'
     pr_id           = db.Column(db.BigInteger,   primary_key=True)
     repo_id         = db.Column(db.BigInteger,   nullable=False)
-    author_email    = db.Column(db.String(255),  nullable=False)
-    author_name     = db.Column(db.String(255),  nullable=False)
-    author_username = db.Column(db.String(255),  nullable=True)
+    author_email    = db.Column(db.String(255))
+    author_name     = db.Column(db.String(255))
+    author_username = db.Column(db.String(255))
     title           = db.Column(db.String(512),  nullable=False)
-    description     = db.Column(db.Text,         nullable=True)
-    url             = db.Column(db.String(512),  nullable=False)
+    description     = db.Column(db.Text)
+    html_url        = db.Column(db.String(512),  nullable=False)
+    api_url         = db.Column(db.String(512),  nullable=False)
     timestamp       = db.Column(db.DateTime,     nullable=False)
     installation_id = db.Column(db.BigInteger,   db.ForeignKey('installations.installation_id'), nullable=False)
+    fully_scanned   = db.Column(db.Boolean,      nullable=False, default=False)
     # One PullRequest has Many Findings
-    findings        = db.relationship('Finding', backref='pull_request', cascade='all, delete-orphan')
-
-
-
+    findings        = db.relationship('Finding', backref='pull_request', lazy=True, cascade='all, delete-orphan')
 
 
