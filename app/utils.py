@@ -66,6 +66,7 @@ def get_installation_token(installation_id):
 
     resp = rq.post(url, headers=headers)
     if not resp.ok:
-        print(f'Token error: {resp.text}')
+        from loguru import logger
+        logger.error(f'Token error: {resp.text}')
         return None
     return resp.json()['token']

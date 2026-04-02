@@ -3,6 +3,7 @@ from app.utils      import login_required, get_installation_token
 from app.models     import Installation, Commit
 from app.extensions import db
 from app.scanners   import scan
+from loguru         import logger
 
 from flask import Blueprint, app, render_template, session, redirect, url_for, flash, request, send_from_directory, jsonify
 from flask_restful import Resource
@@ -30,7 +31,7 @@ def github_webhook():
         f.write(dumps(payload, indent=4))
 
     if event_type == 'ping':
-        print('Webhook connected successfully!')
+        logger.info('Webhook connected successfully!')
         return jsonify({'status': 'ping received'}), 200
     
 
@@ -39,8 +40,9 @@ def github_webhook():
             obj = Installation(
                 installation_id = payload['installation']['id'],
                 issuer_username = payload['sender']['login'],
-                issuer_pfp      = payload['sender']['avatar_url'],
-                repos           = payload['repositories']
+                issuer_pfp_url  = payload['sender']['avatar_url'],
+                repos           = payload['repositories'],
+                user_id         = payload['installation']['account']['id']
             )
             db.session.add(obj)
             db.session.commit()
@@ -83,19 +85,19 @@ def github_webhook():
 
     # Code Push (Commit)
     elif event_type == 'push':
-        # 1. Find out which installation triggered this
+        # Find out which installation triggered this
         installation_id = payload['installation']['id']
         repo_name       = payload['repository']['full_name']
         pusher          = payload['pusher']['name']
         
-        print(f'\n[!] ALERT: {pusher} just pushed code to {repo_name}')
+        logger.info(f'\\n[!] ALERT: {pusher} just pushed code to {repo_name}')
         
-        # 2. Get our bot's master key for this repo
-        print('Generating access token...')
+        # Get our bot's master key for this repo
+        logger.info('Generating access token...')
         token = get_installation_token(installation_id)
-        
         if not token: return jsonify({'status': 'token acquisition failed'}), 500
-        print('Token acquired! Fetching commit details...')
+        logger.info('Token acquired! Fetching commit details...')
+        
         # Get the commits URL
         commits_url = payload['repository']['commits_url'].replace('{/sha}', '')
         # Get the commits info from github
@@ -109,12 +111,12 @@ def github_webhook():
             f.write(dumps(commits_json.json(), indent=4))
         
         latest_commit_msg = commits_json.json()[0]['commit']['message']
-        print(f'SUCCESS! Latest commit message: "{latest_commit_msg}"')
+        logger.success(f'SUCCESS! Latest commit message: "{latest_commit_msg}"')
         commit_objs = []
         for commit in commits_json.json():
             # If this commit is already present in our DB, we can skip it
             if db.session.get(Commit, commit['sha']): continue
-            print(f'Processing commit "{commit["commit"]["message"]}" - {commit["sha"]}')
+            logger.info(f'Processing commit "{commit["commit"]["message"]}" - {commit["sha"]}')
             commit_obj = Commit(
                 sha             = commit['sha'],
                 repo_id         = payload['repository']['id'], # Since repo id is not present in `commit`
@@ -124,7 +126,7 @@ def github_webhook():
                 message         = commit['commit']['message'],
                 url             = commit['html_url'],
                 timestamp       = dt.datetime.strptime(commit['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ'),
-                installation    = installation_id
+                installation_id = installation_id
             )
             commit_objs.append(commit_obj)
         # Do to_scan=True for the latest commit
@@ -181,10 +183,10 @@ def github_webhook():
             repo_name = payload['repository']['name']
             pr_number = payload['pull_request']['number']
             
-            print(f'\n[!] ALERT: PR #{pr_number} was {action} in {repo_owner}/{repo_name}')
+            logger.info(f'\\n[!] ALERT: PR #{pr_number} was {action} in {repo_owner}/{repo_name}')
             
             # 1. Wake up the bot and get the token
-            print('Generating access token...')
+            logger.info('Generating access token...')
             token = get_installation_token(installation_id)
             
             if token:
@@ -199,7 +201,7 @@ def github_webhook():
                 
                 if files_resp.ok:
                     changed_files = files_resp.json()
-                    print(f'SUCCESS! Found {len(changed_files)} changed files to analyze.')
+                    logger.success(f'SUCCESS! Found {len(changed_files)} changed files to analyze.')
                     
                     # 3. Loop through the files to get the code
                     for file in changed_files:
@@ -210,19 +212,19 @@ def github_webhook():
                         if status != 'removed':
                             # 'raw_url' gives you the direct link to download the full, updated file text
                             raw_file_url = file.get('raw_url')
-                            print(f' - Fetching and scanning: {filename}')  
+                            logger.info(f' - Fetching and scanning: {filename}')  
                             
                             # ---> YOUR SAST ENGINE GOES HERE <---
                             # You would do: raw_code = rq.get(raw_file_url, headers=auth_headers).text
                             # And then pass 'raw_code' into your security analysis script.
                             
-                else: print(f'Failed to fetch PR files: {files_resp.text}')
+                else: logger.error(f'Failed to fetch PR files: {files_resp.text}')
                     
             return jsonify({'status': 'pr processed'}), 200
             
         else:
             # We ignore things like 'labeled', 'closed', 'assigned'
-            print(f'Ignored PR action: {action}')
+            logger.debug(f'Ignored PR action: {action}')
             return jsonify({'status': 'ignored action'}), 200
 
     return jsonify({'status': 'ignored'}), 200

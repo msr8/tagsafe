@@ -10,6 +10,7 @@ from flask_dance.contrib.github import github
 from oauthlib.oauth2.rfc6749.errors import TokenExpiredError
 
 from bcrypt import hashpw, gensalt, checkpw
+import rich
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -36,6 +37,17 @@ def page_github_authorised():
 
     session['logged_in'] = True
     session['username']  = resp['login']
+    session['pfp_url']   = resp['avatar_url']
+    session['user_id']   = resp['id']
+
+    # rich.inspect(resp, all=True)
+    with open('after-authorisation.json', 'w') as f:
+        import json
+        json.dump(resp, f, indent=4)
+    if not db.session.get(User, resp['id']):
+        user = User(user_id=resp['id'], username=resp['login'], pfp_url=resp['avatar_url'])
+        db.session.add(user)
+        db.session.commit()
 
     # return resp
     return redirect( session.pop('redirect_to', url_for(POST_LOGIN_REDIRECT)) )

@@ -9,12 +9,13 @@ from app.extensions import db, sess
 from app.config import Config
 
 from sty import fg, bg, ef, rs
+from loguru import logger
 
 from os import environ
 
 
 def create_app():
-    print(ef.bold + fg.green + 'Creating app...' + rs.all)
+    logger.info('Creating app...')
     
 
     app = Flask(__name__)  

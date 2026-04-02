@@ -2,6 +2,7 @@ from app.models import Finding
 from app.extensions import db
 import json
 from .common import run_cmd, normalize_severity
+from loguru import logger
 
 def run(repo_path: str, commit_sha: str) -> list[Finding]:
     findings = []
@@ -27,8 +28,8 @@ def run(repo_path: str, commit_sha: str) -> list[Finding]:
             cwe          = result.get('issue_cwe', {}).get('id', ''),
         )
         findings.append(f)
-    print(data)
-    print(findings)
+    logger.debug(f'Scan data: {data}')
+    logger.debug(f'Findings: {findings}')
     db.session.add_all(findings)
     db.session.commit()
 

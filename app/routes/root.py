@@ -1,6 +1,6 @@
 from app.consts     import GITHUB_APP_NAME, GITHUB_CLIENT_ID, GITHUB_KEY_PATH
 from app.utils      import login_required, get_installation_token
-from app.models     import Installation, Commit
+from app.models     import Installation, Commit, User
 from app.extensions import db
 
 from flask import Blueprint, app, render_template, session, redirect, url_for, flash, request, send_from_directory, jsonify
@@ -53,7 +53,7 @@ def page_dashboard():
     #             repos.extend([ i['full_name'] for i in repos_resp.json().get('repositories', []) ])
     
     # Get all repos from all installations of this user
-    installations = db.session.query(Installation).filter_by(issuer_username=session['username']).all()
+    installations = db.session.get(User, session['user_id']).installations
     # repos = [ r['full_name'] for inst in installations if inst.is_active for r in inst.repos ]
     repos = []
     for inst in installations:

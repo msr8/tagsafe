@@ -8,7 +8,8 @@ from sqlalchemy.dialects.postgresql import JSON
 
 class User(db.Model):
     __tablename__ = 'users'
-    email         = db.Column(db.String(255), primary_key=True)
+    user_id       = db.Column(db.Integer,     primary_key=True)
+    user_email    = db.Column(db.String(255), nullable=True)
     username      = db.Column(db.String(255), nullable=False) # GitHub username
     pfp_url       = db.Column(db.String(512), nullable=True)  # GitHub profile picture URL
     signed_up     = db.Column(db.DateTime,    nullable=False, server_default=db.func.now())
@@ -16,7 +17,7 @@ class User(db.Model):
     installations = db.relationship('Installation', backref='user', cascade='all, delete-orphan')
 
     def __repr__(self):
-        return f"User('{self.email}')"
+        return f"User('{self.username}', '{self.user_id}')"
 
 
 
@@ -32,7 +33,7 @@ class Installation(db.Model):
     created_at        = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
     is_active         = db.Column(db.Boolean, nullable=False, default=True)
     # Foreign Key linking back to User
-    user_email        = db.Column(db.String(255), db.ForeignKey('users.email'), nullable=False)
+    user_id           = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
 
 
 
