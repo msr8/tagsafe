@@ -3,6 +3,140 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-    <a href="https://github.com/apps/{{github_app_name}}/installations/new">Setup GitHub App</a><br>
-    Repos: {{repos}}
+<div class="dashboard-header">
+    <div>
+        <h1>Welcome Back</h1>
+        <p>Manage your linked repositories and security preferences.</p>
+    </div>
+    
+    <div class="dashboard-actions">
+        <a href="https://github.com/apps/{{github_app_name}}/installations/new" class="btn btn-primary">
+            <i data-lucide="plus-circle" width="18" height="18"></i>
+            Setup GitHub App
+        </a>
+    </div>
+</div>
+
+<div class="glass-panel settings-panel" style="margin-bottom: 2rem; padding: 1.5rem;">
+    <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="settings" width="20" height="20"></i> Preferences
+    </h3>
+    <form id="preferences-form" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;">
+        <div>
+            <label for="pref-email" style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">Notification Email</label>
+            <input type="email" id="pref-email" class="form-control" placeholder="admin@example.com" value="{{ preference.email if preference else '' }}" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white;">
+        </div>
+        <div>
+            <label for="pref-severity" style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">Alert Threshold</label>
+            <select id="pref-severity" class="form-control" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--glass-border); background: #141421; color: white;">
+                <option value="0" {% if preference and preference.severity_threshold|string == '0' %}selected{% endif %}>Always Notify</option>
+                <option value="1" {% if preference and preference.severity_threshold|string == '1' %}selected{% endif %}>&ge; Warning</option>
+                <option value="2" {% if preference and preference.severity_threshold|string == '2' or not preference %}selected{% endif %}>&ge; Medium</option>
+                <option value="3" {% if preference and preference.severity_threshold|string == '3' %}selected{% endif %}>&ge; High</option>
+                <option value="4" {% if preference and preference.severity_threshold|string == '4' %}selected{% endif %}>Only Critical</option>
+                <option value="99" {% if preference and preference.severity_threshold|string == '99' %}selected{% endif %}>Never Notify</option>
+            </select>
+        </div>
+        <div>
+            <button type="button" class="btn btn-secondary" onclick="savePreferences()" style="height: 38px;">Save Settings</button>
+        </div>
+    </form>
+</div>
+
+
+{% if repos %}
+    <div class="cards-grid">
+        {% for repo in repos %}
+        <div class="repo-card glass-panel" id="repo-{{ repo.id }}">
+            <div class="repo-header-block" onclick="toggleRepo('{{ repo.id }}')">
+                <div class="repo-header">
+                    <i data-lucide="book-marked" style="color: var(--primary-color);"></i>
+                    <span class="repo-title">{{ repo.full_name }}</span>
+                </div>
+                <div class="repo-controls">
+                    <span class="commit-count">{{ repo.commits|length }} Commits</span>
+                    <i data-lucide="chevron-down" class="expand-icon" id="icon-{{ repo.id }}"></i>
+                </div>
+            </div>
+            
+            <div class="repo-details-wrapper" id="details-{{ repo.id }}">
+                <div class="repo-details-inner">
+                    <hr class="separator">
+                {% if repo.commits %}
+                    <div class="timeline">
+                        {% for commit in repo.commits %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <div class="commit-header">
+                                    <span class="commit-message">{{ commit.message }}</span>
+                                    <span class="commit-sha">
+                                        <a href="{{ commit.url }}" target="_blank" rel="noopener noreferrer">
+                                            {{ commit.sha[:7] }}
+                                            <i data-lucide="external-link" width="14" height="14"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                                <div class="commit-meta">
+                                    <span><i data-lucide="user" width="14" height="14"></i> {{ commit.author }}</span>
+                                    <span><i data-lucide="clock" width="14" height="14"></i> {{ commit.timestamp }}</span>
+                                </div>
+                                
+                                <div class="findings-container">
+                                    {% if commit.findings %}
+                                        <div class="findings-list">
+                                            {% for finding in commit.findings %}
+                                                <div class="finding-item badge-{{ finding.severity|lower }}">
+                                                    <div class="finding-badge" onclick="toggleFinding('find-{{ finding.id }}')">
+                                                        <span class="finding-tool">{{ finding.tool }}</span>
+                                                        <span class="finding-message">{{ finding.severity }}: {{ finding.message }}</span>
+                                                        <i data-lucide="chevron-down" class="expand-icon" id="find-icon-{{ finding.id }}" style="margin-left: auto;"></i>
+                                                    </div>
+                                                    <div class="finding-details-wrapper" id="find-{{ finding.id }}">
+                                                        <div class="finding-details-inner">
+                                                            <strong>File:</strong> <code>{{ finding.file_path }}</code> (Line {{ finding.line_start }})<br>
+                                                            {% if finding.cwe %}<strong>CWE:</strong> <a href="https://cwe.mitre.org/data/definitions/{{ finding.cwe.split('-')[-1] }}.html" target="_blank" style="color: var(--accent-color);">{{ finding.cwe }}</a><br>{% endif %}
+                                                            {% if finding.owasp %}<strong>OWASP:</strong> {{ finding.owasp }}<br>{% endif %}
+                                                            {% if finding.code_snippet %}
+                                                            <strong>Snippet:</strong>
+                                                            <pre><code class="language-python">{{ finding.code_snippet }}</code></pre>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="finding-badge badge-unscanned">
+                                            <i data-lucide="circle-dashed" width="14" height="14"></i>
+                                            <span>Not scanned</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-commits">
+                        <i data-lucide="git-commit" width="24" height="24"></i>
+                        <p>No commits tracked for this repository yet.</p>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state glass-panel">
+        <i data-lucide="inbox" width="48" height="48"></i>
+        <h3>No Repositories Found</h3>
+        <p style="color: var(--text-secondary); margin-top: 1rem;">It looks like you haven't linked any repositories yet or the GitHub App isn't installed.</p>
+        <a href="https://github.com/apps/{{github_app_name}}/installations/new" class="btn btn-primary" style="margin-top: 1.5rem;">
+            Install GitHub App
+        </a>
+    </div>
+{% endif %}
+
 {% endblock %}

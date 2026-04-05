@@ -3,6 +3,22 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-    <h1>Welcome to the Home Page</h1>
-    <p>This is the home page of the app</p>
+<div class="hero">
+    <h1>Secure Your Code<br>Before You Merge</h1>
+    <p>Automated security scanning integrated directly directly into your GitHub workflow. Prevent vulnerabilities from reaching production without changing how you work.</p>
+    
+    <div class="hero-actions">
+        {% if session.get('logged_in') %}
+            <a href="{{ url_for('root.page_dashboard') }}" class="btn btn-primary">
+                Go to Dashboard
+                <i data-lucide="arrow-right" width="18" height="18"></i>
+            </a>
+        {% else %}
+            <a href="{{ url_for('github.login') }}" class="btn btn-primary">
+                <i data-lucide="github" width="20" height="20"></i>
+                Continue with GitHub
+            </a>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

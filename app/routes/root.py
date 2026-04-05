@@ -54,12 +54,32 @@ def page_dashboard():
     
     # Get all repos from all installations of this user
     installations = db.session.get(User, session['user_id']).installations
-    # repos = [ r['full_name'] for inst in installations if inst.is_active for r in inst.repos ]
-    repos = []
+    
+    repos_data = []
     for inst in installations:
         if not inst.is_active: continue
-        for r in inst.repos: repos.append(r['full_name'])
-    return render_template('dashboard.html', github_app_name=GITHUB_APP_NAME, repos=repos)
+        for r in inst.repos:
+            repo_info = {
+                'id': r.get('id'),
+                'full_name': r.get('full_name'),
+                'url': r.get('html_url'),
+                'commits': []
+            }
+            # Fetch commits from DB for this repo (descending order by timestamp)
+            commits = db.session.query(Commit).filter_by(repo_id=repo_info['id']).order_by(Commit.timestamp.desc()).all()
+            for c in commits:
+                repo_info['commits'].append({
+                    'sha': c.sha,
+                    'message': c.message,
+                    'author': c.author_name,
+                    'url': c.url,
+                    'timestamp': c.timestamp.strftime("%b %d, %Y %I:%M %p"),
+                    'findings': [f.to_dict() for f in c.findings]
+                })
+            repos_data.append(repo_info)
+            
+    user = db.session.get(User, session['user_id'])            
+    return render_template('dashboard.html', github_app_name=GITHUB_APP_NAME, repos=repos_data, preference=user.preference or {})
 
 
 
@@ -71,9 +91,15 @@ def change_config():
     new_config      = request.get_json()
     user            = db.session.get(User, session['user_id'])
 
+    if user.preference is None:
+        user.preference = {}
+
     user.preference['email']              = new_config.get('email',              user.preference.get('email', ''))
-    user.preference['severity_threshold'] = new_config.get('severity_threshold', user.preference.get('severity_threshold', 2))
+    user.preference['severity_threshold'] = int(new_config.get('severity_threshold', user.preference.get('severity_threshold', 2)))
+    
     db.session.commit()
+    
+    return jsonify({'status': 'success', 'message': 'Preferences saved successfully!'}), 200
 
 
 

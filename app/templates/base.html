@@ -1,38 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} {% endblock %} - MSR8</title>
+
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
-    <title>{% block title %} {% endblock %}</title>
+
     {% block head %} {% endblock %}
 </head>
 
-
-
 <body>
-    
-    <div id="navbar">
-        <div id="navbar-links">
-            <a href="{{ url_for('root.page_index') }}">Home</a>
-        </div>
 
-        <div id="profile">
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="{{ url_for('root.page_index') }}" class="brand">
+            <i data-lucide="shield-check"></i>
+            MSR8
+        </a>
+
+        <div class="nav-links">
             {% if session.get('logged_in') %}
-                <a href="{{ url_for('root.page_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('root.page_dashboard') }}" class="nav-item">
+                <i data-lucide="layout-dashboard" width="18" height="18"></i> Dashboard
+            </a>
+            <a href="{{ url_for('auth.page_logout') }}" class="btn btn-secondary">
+                <i data-lucide="log-out" width="18" height="18"></i> Logout
+            </a>
             {% else %}
-                <a href="{{ url_for('github.login') }}">Login</a>
+            <a href="{{ url_for('github.login') }}" class="btn btn-primary">
+                <i data-lucide="github" width="18" height="18"></i> Login
+            </a>
             {% endif %}
         </div>
-    </div>
+    </nav>
 
-    
-    <div id="content-container">
+    <!-- Main Content Container -->
+    <main class="container">
         {% block content %} {% endblock %}
-    </div>
+    </main>
 
+    <!-- JS Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+
+    <!-- PrismJS CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
+    <!-- Render Flask Flash Messages -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            {% with messages = get_flashed_messages(with_categories = true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            showToast("{{ message }}", "{{ category }}");
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        });
+    </script>
+    
+    <!-- PrismJS Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 </body>
-
-
 
 </html>
