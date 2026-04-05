@@ -13,13 +13,19 @@ import requests as rq
 from loguru import logger
 from bcrypt import hashpw, gensalt, checkpw
 import rich
+import json
 
 auth_bp = Blueprint('auth', __name__)
 
 
 
 
-
+@auth_bp.route('/temp')
+def page_temp():
+    # return f'<pre>{json.dumps(github.get("/user").json(), indent=4)}</pre>'
+    
+    email_resp = github.get('/user/emails')
+    return f'<pre>{json.dumps(email_resp.json(), indent=4)}</pre>'
 
 @auth_bp.route('/github-authorised/')
 def page_github_authorised():
@@ -37,10 +43,18 @@ def page_github_authorised():
         return f'Failed to fetch user info, please <a href="{url_for("root.page_index")}">login again</a>', 500
     resp:dict = resp.json()
 
+    # Get the primary email of the user
+    emails = github.get('/user/emails').json()
+    for e in emails:
+        if e.get('primary') and e.get('verified'):
+            email = e['email']
+            break
+
     session['logged_in'] = True
     session['username']  = resp['login']
     session['pfp_url']   = resp['avatar_url']
     session['user_id']   = resp['id']
+    session['email']     = email
 
     # rich.inspect(resp, all=True)
     with open('after-authorisation.json', 'w') as f:
@@ -49,7 +63,7 @@ def page_github_authorised():
     
     # If first time logging in, add this user to the database
     if not db.session.get(User, resp['id']):
-        user = User(user_id=resp['id'], username=resp['login'], pfp_url=resp['avatar_url'])
+        user = User(user_id=resp['id'], user_email=email, username=resp['login'], pfp_url=resp['avatar_url'], preference={'email': email, 'severity_threshold': 2})
         db.session.add(user)
     
     # Update all installations of this user with the latest username and pfp_url. Also the latest repos for each installation (in case user has authorised new repos since last login). Also get new installations

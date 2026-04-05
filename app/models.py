@@ -1,5 +1,5 @@
 from app.extensions import db
-from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.ext.mutable import MutableList, MutableDict
 from sqlalchemy.dialects.postgresql import JSON
 # https://www.digitalocean.com/community/tutorials/how-to-use-one-to-many-database-relationships-with-flask-sqlalchemy
 
@@ -13,6 +13,7 @@ class User(db.Model):
     username      = db.Column(db.String(255), nullable=False) # GitHub username
     pfp_url       = db.Column(db.String(512), nullable=True)  # GitHub profile picture URL
     signed_up     = db.Column(db.DateTime,    nullable=False, server_default=db.func.now())
+    preference    = db.Column(MutableDict.as_mutable(JSON), nullable=True) # {'email': '...', 'severity_threshold': 2} # Basically when to send email. Always -> 0, >= Warning -> 1, >= Medium -> 2, >= High -> 3, Only Critical -> 4, Never -> 99
     # One User has Many Installations
     installations = db.relationship('Installation', backref='user', cascade='all, delete-orphan')
 
@@ -44,7 +45,7 @@ class Finding(db.Model):
     id           = db.Column(db.Integer, primary_key=True)
     tool         = db.Column(db.String(64))             # bandit | gosec | nodejsscan | cppcheck | semgrep
     rule_id      = db.Column(db.String(128), nullable=True)
-    severity     = db.Column(db.String(32))         # CRITICAL | HIGH | MEDIUM | LOW | WARNING | INFO 
+    severity     = db.Column(db.String(32))         # CRITICAL | HIGH | MEDIUM | LOW | WARNING | INFO
     confidence   = db.Column(db.String(32),  nullable=True) # For tools that provide confidence levels (like bandit)
     file_path    = db.Column(db.String(512))
     line_start   = db.Column(db.Integer,     nullable=True)
@@ -53,9 +54,28 @@ class Finding(db.Model):
     code_snippet = db.Column(db.Text)
     cwe          = db.Column(db.String(64),  nullable=True)
     owasp        = db.Column(db.String(128), nullable=True)
+    timestamp    = db.Column(db.DateTime,    nullable=False, server_default=db.func.now())
     # Foreign Keys to link back to Commits and Pull Requests
     commit_sha   = db.Column(db.String(40), db.ForeignKey('commits.sha'),         nullable=True)
     pr_id        = db.Column(db.BigInteger, db.ForeignKey('pull_requests.pr_id'), nullable=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'tool': self.tool,
+            'rule_id': self.rule_id,
+            'severity': self.severity,
+            'confidence': self.confidence,
+            'file_path': self.file_path,
+            'line_start': self.line_start,
+            'line_end': self.line_end,
+            'message': self.message,
+            'code_snippet': self.code_snippet,
+            'cwe': self.cwe,
+            'owasp': self.owasp,
+            'commit_sha': self.commit_sha,
+            'pr_id': self.pr_id
+        }
 
 
 

@@ -1,10 +1,10 @@
-[ ] Local LLM
-[ ] PR Integration
+[X] Local LLM
+[X] PR Integration
 [ ] UI
 [ ] Additional Scanners
-[ ] Email Notifications
+[X] Email Notifications
 
 Small
 [ ] Lessen the token calls for git API
 [ ] Add reload repo button
-[ ] Distribiute headers with tokens
+[ ] Distribute headers with tokens (??)

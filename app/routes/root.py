@@ -63,6 +63,43 @@ def page_dashboard():
 
 
 
+@root_bp.route('/api/change-config', methods=['POST'])
+def change_config():
+    # See if the user is logged in
+    if not session.get('logged_in'): return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+    # Update the preference for this user in the database
+    new_config      = request.get_json()
+    user            = db.session.get(User, session['user_id'])
+
+    user.preference['email']              = new_config.get('email',              user.preference.get('email', ''))
+    user.preference['severity_threshold'] = new_config.get('severity_threshold', user.preference.get('severity_threshold', 2))
+    db.session.commit()
+
+
+
+@root_bp.route('/api/reload-repos', methods=['POST'])
+def reload_repos():
+    # See if the user is logged in
+    if not session.get('logged_in'): return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+    
+    installations = db.session.get(User, session['user_id']).installations
+    for inst in installations:
+        if not inst.is_active: continue
+        token = get_installation_token(inst.installation_id)
+        if token:
+            auth_headers = {
+                'Authorization': f'Bearer {token}',
+                'Accept': 'application/vnd.github.v3+json'
+            }
+            repos_resp = rq.get(f'https://api.github.com/installation/repositories', headers=auth_headers)
+            inspect(repos_resp)
+            if repos_resp.ok:
+                inst.repos = repos_resp.json().get('repositories', [])
+                db.session.commit()
+    
+    return jsonify({'status': 'success', 'message': 'Repos reloaded successfully'})
+
+
 
 
 class TestAPI(Resource):

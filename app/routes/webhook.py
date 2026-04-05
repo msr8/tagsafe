@@ -3,6 +3,7 @@ from app.utils      import login_required, get_installation_token
 from app.models     import Installation, Commit, PullRequest
 from app.extensions import db
 from app.scanners   import pr_scan, commit_scan
+from app.services   import llm, email
 from loguru         import logger
 
 from flask import Blueprint, app, render_template, session, redirect, url_for, flash, request, send_from_directory, jsonify
@@ -15,7 +16,7 @@ import datetime as dt
 from collections import defaultdict
 import tempfile
 from git import Repo
-
+from markdown import markdown
 
 
 webhook_bp = Blueprint('webhook', __name__)
@@ -110,11 +111,12 @@ def github_webhook():
             f.write(dumps(commits_json.json(), indent=4))
         
         latest_commit_msg = commits_json.json()[0]['commit']['message']
+        latest_commit_sha = commits_json.json()[0]['sha']
         logger.success(f'SUCCESS! Latest commit message: "{latest_commit_msg}"')
         commit_objs = []
         for commit in commits_json.json():
-            # If this commit is already present in our DB, we can skip it
-            if db.session.get(Commit, commit['sha']): continue
+            # If this commit is NOT the latest commit and is already present in our DB, we can skip it
+            if commit['sha'] != latest_commit_sha and db.session.get(Commit, commit['sha']): continue
             logger.info(f'Processing commit "{commit["commit"]["message"]}" - {commit["sha"]}')
             commit_obj = Commit(
                 sha             = commit['sha'],
@@ -136,7 +138,38 @@ def github_webhook():
         # db.session.commit()
 
         commit = commit_objs[-1]
-        commit_scan(commit, token, payload)
+        scanners, findings = commit_scan(commit, token, payload)
+
+        # Send email if severity of any finding is above the user's preference
+        severity_map = {'INFO': 1, 'LOW': 2, 'MEDIUM': 3, 'HIGH': 4, 'CRITICAL': 5}
+        user         = db.session.get(Installation, installation_id).user
+        severity     = user.preference.get('severity_threshold', 2)
+        filtered_findings = [f for f in findings if severity_map.get(f.severity, 0) >= severity]
+        if filtered_findings:
+            llm_prompt = f"""You are a helpful and precise code review assistant integrated with GitHub. Your task is to analyze the following list of security scan findings from a commit and provide a concise summary that can be posted as a comment on the PR. The summary should include:
+1. A brief overview of the security issues found.
+2. Any critical issues that need immediate attention.
+
+The scanners that were run are: {', '.join(scanners)}.
+
+Here are the findings:
+{dumps([f.to_dict() for f in filtered_findings], indent=4)}
+Please provide the summary in a clear and concise manner, suitable for developers to quickly understand the security implications of their code changes and the developer to know if the PR has any malicious intent or not."""
+
+            llm_resp = markdown(llm(llm_prompt))
+            ai_aummary = f'<h1>AI Summary (click to expand)</h1>\n\n{llm_resp}\n\n'
+
+            table = '<table>\n<tr><th>Tool</th><th>Severity</th><th>CWE</th><th>File</th><th>Line</th><th>Message</th></tr>\n'
+            for f in filtered_findings: table += f'<tr><td>{f.tool}</td><td>{f.severity}</td><td>{f.cwe if f.cwe else "N/A"}</td><td><code>{f.file_path}</code></td><td>{f.line_start}</td><td>{f.message}</td></tr>\n'
+            table += '</table>'
+
+            email_body = f'Hi {commit.author_name},<br><br>Our security scanners have detected {len(filtered_findings)} potential security issues in your recent commit to {repo_name}<br><br>{ai_aummary}<br><br>{table}<br><br>Please review these findings and address any critical issues as soon as possible to ensure the security of our codebase.<br><br>Best regards,<br>Security Bot'
+            print(email_body)
+            email(
+                rec_email = user.preference.get('email'),
+                subject   = f'Security Alert: {len(filtered_findings)} issues found in your recent commit to {repo_name}',
+                body      = email_body,
+            )
 
             # # -----> Scanning stuff <-----
             # # Looping through the commits from latest to oldest to get the LISTS of commits which changed stuff
@@ -172,8 +205,8 @@ def github_webhook():
         if not payload.get('action') in ['opened', 'synchronize']: 
             logger.debug(f'Ignored PR action: {payload.get("action")}')
             return jsonify({'status': 'ignored action'}), 200
-        with open('pr_payload.json', 'w') as f:
-            f.write(dumps(payload, indent=4))
+        # with open('pr_payload.json', 'w') as f:
+        #     f.write(dumps(payload, indent=4))
         
         logger.info(f'[!] ALERT: PR #{payload["number"]} was {payload["action"]} in {payload["repository"]["full_name"]}')
 
@@ -199,8 +232,38 @@ def github_webhook():
 
         # Run the scanner on this PR
         token = get_installation_token(payload['installation']['id'])
-        pr_scan(pr_obj, token, payload)
+        scanners, findings = pr_scan(pr_obj, token, payload)
+        
+        # Make a summary of the findings to post as a comment on the PR
+        if not findings:
+            comment_body = f'No issues found in this PR :). Ran the following scanners: {", ".join(scanners)}'
+        else:
+            import time
+            start = time.time()
+            prompt = f"""You are a helpful and precise code review assistant integrated with GitHub. Your task is to analyze the following list of security scan findings from a pull request and provide a concise summary that can be posted as a comment on the PR. The summary should include:
+1. A brief overview of the security issues found.
+2. Any critical issues that need immediate attention.
 
+The scanners that were run are: {', '.join(scanners)}.
+
+Here are the findings:
+{dumps([f.to_dict() for f in findings], indent=4)}
+Please provide the summary in a clear and concise manner, suitable for developers to quickly understand the security implications of their code changes and the developer to know if the PR has any malicious intent or not."""
+            print('Generating LLM summary for the findings...')
+            comment_body = llm(prompt)
+            print(f'Took {time.time() - start:.2f} seconds to generate the summary.')
+            comment_body += '<details><summary>Scan Findings (click to expand)</summary>\n\n|Tool|Severity|CWE|File|Line|Message|\n|-|-|-|-|-|-|\n'
+            for f in findings:
+                comment_body += f'|{f.tool}|{f.severity}|{f.cwe if f.cwe else "N/A"}|`{f.file_path}`|{f.line_start}|{f.message}|\n'
+            comment_body += '\n</details>'
+            print('LLM summary generated! Posting it as a comment on the PR...')
+        # Post this summary as a comment on the PR using GitHub's API
+        comments_url = payload['pull_request']['comments_url']
+        auth_headers = {
+            'Authorization': f'Bearer {token}',
+            'Accept': 'application/vnd.github.v3+json'
+        }
+        rq.post(comments_url, headers=auth_headers, json={'body': comment_body})
 
     return jsonify({'status': 'ignored'}), 200
     
