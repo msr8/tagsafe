@@ -88,3 +88,25 @@ function toggleFinding(findingId) {
         }
     }
 }
+
+// Function to switch tabs between Pull Requests and Commits
+function switchTab(repoId, tabId) {
+    // Deactivate all buttons in this repo's tabs
+    const tabsContainer = document.querySelector(`#details-${repoId} .repo-tabs`);
+    if (tabsContainer) {
+        const tabBtns = tabsContainer.querySelectorAll(`.tab-btn`);
+        tabBtns.forEach(btn => btn.classList.remove('active'));
+    }
+
+    // Hide all tab contents in this repo
+    const tabContents = document.querySelectorAll(`#details-${repoId} > .repo-details-inner > .tab-content`);
+    tabContents.forEach(content => content.classList.remove('active'));
+
+    // Activate the clicked button
+    const targetBtn = tabsContainer ? tabsContainer.querySelector(`button[onclick="switchTab('${repoId}', '${tabId}')"]`) : null;
+    if (targetBtn) targetBtn.classList.add('active');
+
+    // Show the targeted tab
+    const targetContent = document.getElementById(tabId);
+    if (targetContent) targetContent.classList.add('active');
+}

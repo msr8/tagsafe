@@ -62,8 +62,15 @@
             <div class="repo-details-wrapper" id="details-{{ repo.id }}">
                 <div class="repo-details-inner">
                     <hr class="separator">
-                {% if repo.commits %}
-                    <div class="timeline">
+                    
+                    <div class="repo-tabs">
+                        <button class="tab-btn active" onclick="switchTab('{{ repo.id }}', 'tab-commits-{{ repo.id }}')">Commits ({{ repo.commits|length }})</button>
+                        <button class="tab-btn" onclick="switchTab('{{ repo.id }}', 'tab-prs-{{ repo.id }}')">Pull Requests ({{ repo.pull_requests|length }})</button>
+                    </div>
+                    
+                    <div id="tab-commits-{{ repo.id }}" class="tab-content active">
+                        {% if repo.commits %}
+                            <div class="timeline">
                         {% for commit in repo.commits %}
                         <div class="timeline-item">
                             <div class="timeline-marker"></div>
@@ -117,12 +124,72 @@
                         </div>
                         {% endfor %}
                     </div>
-                {% else %}
-                    <div class="no-commits">
-                        <i data-lucide="git-commit" width="24" height="24"></i>
-                        <p>No commits tracked for this repository yet.</p>
+                        {% endif %}
                     </div>
-                {% endif %}
+                    
+                    <div id="tab-prs-{{ repo.id }}" class="tab-content">
+                        {% if repo.pull_requests %}
+                            <div class="timeline">
+                                {% for pr in repo.pull_requests %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <div class="commit-header">
+                                            <span class="commit-message">{{ pr.title }}</span>
+                                            <span class="commit-sha">
+                                                <a href="{{ pr.url }}" target="_blank" rel="noopener noreferrer">
+                                                    #{{ pr.id }}
+                                                    <i data-lucide="external-link" width="14" height="14"></i>
+                                                </a>
+                                            </span>
+                                        </div>
+                                        <div class="commit-meta">
+                                            <span><i data-lucide="user" width="14" height="14"></i> {{ pr.author }}</span>
+                                            <span><i data-lucide="clock" width="14" height="14"></i> {{ pr.timestamp }}</span>
+                                        </div>
+                                        
+                                        <div class="findings-container">
+                                            {% if pr.findings %}
+                                                <div class="findings-list">
+                                                    {% for finding in pr.findings %}
+                                                        <div class="finding-item badge-{{ finding.severity|lower }}">
+                                                            <div class="finding-badge" onclick="toggleFinding('find-{{ finding.id }}')">
+                                                                <span class="finding-tool">{{ finding.tool }}</span>
+                                                                <span class="finding-message">{{ finding.severity }}: {{ finding.message }}</span>
+                                                                <i data-lucide="chevron-down" class="expand-icon" id="find-icon-{{ finding.id }}" style="margin-left: auto;"></i>
+                                                            </div>
+                                                            <div class="finding-details-wrapper" id="find-{{ finding.id }}">
+                                                                <div class="finding-details-inner">
+                                                                    <strong>File:</strong> <code>{{ finding.file_path }}</code> (Line {{ finding.line_start }})<br>
+                                                                    {% if finding.cwe %}<strong>CWE:</strong> <a href="https://cwe.mitre.org/data/definitions/{{ finding.cwe.split('-')[-1] }}.html" target="_blank" style="color: var(--accent-color);">{{ finding.cwe }}</a><br>{% endif %}
+                                                                    {% if finding.owasp %}<strong>OWASP:</strong> {{ finding.owasp }}<br>{% endif %}
+                                                                    {% if finding.code_snippet %}
+                                                                    <strong>Snippet:</strong>
+                                                                    <pre><code class="language-python">{{ finding.code_snippet }}</code></pre>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <div class="finding-badge badge-unscanned">
+                                                    <i data-lucide="circle-dashed" width="14" height="14"></i>
+                                                    <span>Not scanned</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="no-commits">
+                                <i data-lucide="git-pull-request" width="24" height="24"></i>
+                                <p>No pull requests tracked for this repository yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,6 +1,6 @@
 from app.consts     import GITHUB_APP_NAME, GITHUB_CLIENT_ID, GITHUB_KEY_PATH
 from app.utils      import login_required, get_installation_token
-from app.models     import Installation, Commit, User
+from app.models     import Installation, Commit, User, PullRequest
 from app.extensions import db
 
 from flask import Blueprint, app, render_template, session, redirect, url_for, flash, request, send_from_directory, jsonify
@@ -76,6 +76,19 @@ def page_dashboard():
                     'timestamp': c.timestamp.strftime("%b %d, %Y %I:%M %p"),
                     'findings': [f.to_dict() for f in c.findings]
                 })
+            
+            repo_info['pull_requests'] = []
+            prs = db.session.query(PullRequest).filter_by(repo_id=repo_info['id']).order_by(PullRequest.timestamp.desc()).all()
+            for pr in prs:
+                repo_info['pull_requests'].append({
+                    'id': pr.pr_id,
+                    'title': pr.title,
+                    'author': pr.author_username or pr.author_name,
+                    'url': pr.html_url,
+                    'timestamp': pr.timestamp.strftime("%b %d, %Y %I:%M %p"),
+                    'findings': [f.to_dict() for f in pr.findings]
+                })
+                
             repos_data.append(repo_info)
             
     user = db.session.get(User, session['user_id'])            
