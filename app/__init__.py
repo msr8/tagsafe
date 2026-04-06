@@ -48,7 +48,7 @@ def create_app():
         # scope = 'repo',
         redirect_to = 'auth.page_github_authorised'
     )
-    app.register_blueprint(github_blueprint, url_prefix='/github-login')
+    app.register_blueprint(github_blueprint, url_prefix='/login')
     
 
     # Register blueprints
