@@ -110,3 +110,35 @@ function switchTab(repoId, tabId) {
     const targetContent = document.getElementById(tabId);
     if (targetContent) targetContent.classList.add('active');
 }
+
+// Function to reload repos
+function reloadRepos() {
+    const btn = document.getElementById('reload-repos-btn');
+    const icon = btn ? btn.querySelector('svg') : null;
+    
+    // Optional: Add spinning animation
+    if (icon) icon.classList.add('lucide-spin');
+    
+    fetch('/api/reload-repos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (icon) icon.classList.remove('lucide-spin');
+        if (data.status === 'success') {
+            showToast(data.message || 'Repositories reloaded!', 'success');
+            // Reload the page to show the updated repos
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Error reloading repositories.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (icon) icon.classList.remove('lucide-spin');
+        showToast('A network error occurred while reloading repositories.', 'error');
+    });
+}

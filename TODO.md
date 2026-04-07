@@ -1,6 +1,6 @@
 [X] Local LLM
 [X] PR Integration
-[ ] UI
+[X] UI
 [ ] Additional Scanners
 [X] Email Notifications
 

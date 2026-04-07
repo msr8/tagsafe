@@ -30,6 +30,7 @@ html, body {
 body {
     font-family: 'Outfit', sans-serif;
     background: var(--bg-gradient);
+    background-attachment: fixed;
     color: var(--text-primary);
     display: flex;
     flex-direction: column;
@@ -570,3 +571,4 @@ main {
 .badge-high { border-color: #f97316; color: #fdba74; }
 .badge-critical .finding-badge { border-left-color: var(--danger-color); color: #fca5a5; }
 .badge-critical { border-color: var(--danger-color); color: #fca5a5; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .lucide-spin { animation: spin 1s linear infinite; }
