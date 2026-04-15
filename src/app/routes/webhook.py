@@ -1,4 +1,4 @@
-from app.consts     import GITHUB_APP_NAME, GITHUB_CLIENT_ID, GITHUB_KEY_PATH
+from app.consts     import GITHUB_APP_NAME, GITHUB_CLIENT_ID, GITHUB_KEY_PATH, PROMPT
 from app.utils      import login_required, get_installation_token
 from app.models     import Installation, Commit, PullRequest
 from app.extensions import db
@@ -134,8 +134,8 @@ def github_webhook():
         commit_objs[0].to_scan = True
         # Reverse the list so that the oldest commit gets added first
         commit_objs.reverse()
-        # db.session.add_all(commit_objs)
-        # db.session.commit()
+        db.session.add_all(commit_objs)
+        db.session.commit()
 
         commit = commit_objs[-1]
         scanners, findings = commit_scan(commit, token, payload)
@@ -146,18 +146,13 @@ def github_webhook():
         severity     = user.preference.get('severity_threshold', 2)
         filtered_findings = [f for f in findings if severity_map.get(f.severity, 0) >= severity]
         if filtered_findings:
-            llm_prompt = f"""You are a helpful and precise code review assistant integrated with GitHub. Your task is to analyze the following list of security scan findings from a commit and provide a concise summary that can be posted as a comment on the PR. The summary should include:
-1. A brief overview of the security issues found.
-2. Any critical issues that need immediate attention.
-
-The scanners that were run are: {', '.join(scanners)}.
-
-Here are the findings:
-{dumps([f.to_dict() for f in filtered_findings], indent=4)}
-Please provide the summary in a clear and concise manner, suitable for developers to quickly understand the security implications of their code changes and the developer to know if the PR has any malicious intent or not."""
+            llm_prompt = PROMPT.format(
+                scanners=', '.join(scanners),
+                findings=dumps([f.to_dict() for f in filtered_findings], indent=4)
+            )
 
             llm_resp = markdown(llm(llm_prompt))
-            ai_aummary = f'<h1>AI Summary (click to expand)</h1>\n\n{llm_resp}\n\n'
+            ai_aummary = f'<h1>AI Summary</h1>\n\n{llm_resp}\n\n'
 
             table = '<table>\n<tr><th>Tool</th><th>Severity</th><th>CWE</th><th>File</th><th>Line</th><th>Message</th></tr>\n'
             for f in filtered_findings: table += f'<tr><td>{f.tool}</td><td>{f.severity}</td><td>{f.cwe if f.cwe else "N/A"}</td><td><code>{f.file_path}</code></td><td>{f.line_start}</td><td>{f.message}</td></tr>\n'
@@ -240,23 +235,18 @@ Please provide the summary in a clear and concise manner, suitable for developer
         else:
             import time
             start = time.time()
-            prompt = f"""You are a helpful and precise code review assistant integrated with GitHub. Your task is to analyze the following list of security scan findings from a pull request and provide a concise summary that can be posted as a comment on the PR. The summary should include:
-1. A brief overview of the security issues found.
-2. Any critical issues that need immediate attention.
-
-The scanners that were run are: {', '.join(scanners)}.
-
-Here are the findings:
-{dumps([f.to_dict() for f in findings], indent=4)}
-Please provide the summary in a clear and concise manner, suitable for developers to quickly understand the security implications of their code changes and the developer to know if the PR has any malicious intent or not."""
-            print('Generating LLM summary for the findings...')
-            comment_body = llm(prompt)
-            print(f'Took {time.time() - start:.2f} seconds to generate the summary.')
+            llm_prompt = PROMPT.format(
+                scanners=', '.join(scanners),
+                findings=dumps([f.to_dict() for f in findings], indent=4)
+            )
+            logger.info(f'Generating LLM summary for the findings... (PR: {payload["pull_request"]["number"]})')
+            comment_body = llm(llm_prompt)
+            logger.info(f'Took {time.time() - start:.2f} seconds to generate the summary. (PR: {payload["pull_request"]["number"]})')
             comment_body += '<details><summary>Scan Findings (click to expand)</summary>\n\n|Tool|Severity|CWE|File|Line|Message|\n|-|-|-|-|-|-|\n'
             for f in findings:
                 comment_body += f'|{f.tool}|{f.severity}|{f.cwe if f.cwe else "N/A"}|`{f.file_path}`|{f.line_start}|{f.message}|\n'
             comment_body += '\n</details>'
-            print('LLM summary generated! Posting it as a comment on the PR...')
+            logger.info(f'LLM summary generated! Posting it as a comment on the PR... (PR: {payload["pull_request"]["number"]})')
         # Post this summary as a comment on the PR using GitHub's API
         comments_url = payload['pull_request']['comments_url']
         auth_headers = {

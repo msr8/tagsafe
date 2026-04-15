@@ -3,7 +3,7 @@ from rich import inspect
 from app.extensions import db
 from app.models     import *
 
-from . import all_semgrep, c_cppcheck, go_gosec, js_nodejsscan, py_bandit
+from . import all_semgrep, c_cppcheck, go_gosec, js_nodejsscan, py_bandit, ruby_brakeman, rust_cargoaudit, all_trivy, all_dependencycheck, all_gitleaks, py_safety, all_yara
 
 from git import Repo
 from loguru import logger
@@ -33,7 +33,7 @@ def commit_scan(commit:Commit, token:str, payload:dict) -> tuple[set, list[Findi
         logger.opt(colors=True).info(f'Checked out to commit <magenta>{commit.sha}</magenta>. Repo is ready for scanning!')
 
         # Go through all the files and see what extentions are present, and run the respective scanners
-        scanners = {'semgrep'} 
+        scanners = {'semgrep', 'all_trivy', 'all_dependencycheck', 'all_gitleaks', 'all_yara'} 
         for root, dirs, files in os.walk(tmpdir):
             for file in files:
                 ext = file.split('.')[-1]
@@ -42,14 +42,25 @@ def commit_scan(commit:Commit, token:str, payload:dict) -> tuple[set, list[Findi
                 elif ext in ['go']: scanners.add('go_gosec')
                 elif ext in ['js']: scanners.add('js_nodejsscan')
                 elif ext in ['py']: scanners.add('py_bandit')
+                elif ext in ['rb']: scanners.add('ruby_brakeman')
+                if file == 'Cargo.lock': scanners.add('rust_cargoaudit')
+                # Removed this cause safety requires an acc :(
+                # if file == 'requirements.txt': scanners.add('py_safety')
         
         logger.info(f'Scanners to run based on file extensions: <magenta>{scanners}</magenta>')
         findings = []
-        if 'all_semgrep'   in scanners: findings.extend(all_semgrep.run   (tmpdir))
-        if 'c_cppcheck'    in scanners: findings.extend(c_cppcheck.run    (tmpdir))
-        if 'go_gosec'      in scanners: findings.extend(go_gosec.run      (tmpdir))
-        if 'js_nodejsscan' in scanners: findings.extend(js_nodejsscan.run (tmpdir))
-        if 'py_bandit'     in scanners: findings.extend(py_bandit.run     (tmpdir))
+        if 'all_semgrep'         in scanners: findings.extend(all_semgrep.run         (tmpdir))
+        if 'all_yara'            in scanners: findings.extend(all_yara.run            (tmpdir))
+        if 'all_trivy'           in scanners: findings.extend(all_trivy.run           (tmpdir))
+        if 'all_dependencycheck' in scanners: findings.extend(all_dependencycheck.run (tmpdir))
+        if 'all_gitleaks'        in scanners: findings.extend(all_gitleaks.run        (tmpdir))
+        if 'c_cppcheck'          in scanners: findings.extend(c_cppcheck.run          (tmpdir))
+        if 'go_gosec'            in scanners: findings.extend(go_gosec.run            (tmpdir))
+        if 'js_nodejsscan'       in scanners: findings.extend(js_nodejsscan.run       (tmpdir))
+        if 'py_bandit'           in scanners: findings.extend(py_bandit.run           (tmpdir))
+        if 'py_safety'           in scanners: findings.extend(py_safety.run           (tmpdir))
+        if 'ruby_brakeman'       in scanners: findings.extend(ruby_brakeman.run       (tmpdir))
+        if 'rust_cargoaudit'     in scanners: findings.extend(rust_cargoaudit.run     (tmpdir))
 
         commit.to_scan       = False
         commit.fully_scanned = True
@@ -71,7 +82,7 @@ def pr_scan(pr:PullRequest, token:str, payload:dict) -> tuple[set, list[Finding]
     }
     files_resp = rq.get(pr.api_url + '/files', headers=auth_headers)
 
-    scanners = {'semgrep'}
+    scanners = {'semgrep', 'all_trivy', 'all_dependencycheck', 'all_gitleaks', 'all_yara'}
     # Download the changed files
     with tempfile.TemporaryDirectory() as tmpdir:
         # tmpdir = 'repo'
@@ -94,14 +105,24 @@ def pr_scan(pr:PullRequest, token:str, payload:dict) -> tuple[set, list[Finding]
             elif ext in ['go']: scanners.add('go_gosec')
             elif ext in ['js']: scanners.add('js_nodejsscan')
             elif ext in ['py']: scanners.add('py_bandit')
+            elif ext in ['rb']: scanners.add('ruby_brakeman')
+            if file_path.endswith('Cargo.lock'): scanners.add('rust_cargoaudit')
+            if file_path.endswith('requirements.txt'): scanners.add('py_safety')
     
         logger.opt(colors=True).info(f'Downloaded changed files for PR #{pr.pr_id} in <magenta>{tmpdir}</> | <magenta>{scanners}</>')
         findings = []
-        if 'all_semgrep'   in scanners: findings.extend(all_semgrep.run   (tmpdir))
-        if 'c_cppcheck'    in scanners: findings.extend(c_cppcheck.run    (tmpdir))
-        if 'go_gosec'      in scanners: findings.extend(go_gosec.run      (tmpdir))
-        if 'js_nodejsscan' in scanners: findings.extend(js_nodejsscan.run (tmpdir))
-        if 'py_bandit'     in scanners: findings.extend(py_bandit.run     (tmpdir))
+        if 'all_semgrep'         in scanners: findings.extend(all_semgrep.run         (tmpdir))
+        if 'all_yara'            in scanners: findings.extend(all_yara.run            (tmpdir))
+        if 'all_trivy'           in scanners: findings.extend(all_trivy.run           (tmpdir))
+        if 'all_dependencycheck' in scanners: findings.extend(all_dependencycheck.run (tmpdir))
+        if 'all_gitleaks'        in scanners: findings.extend(all_gitleaks.run        (tmpdir))
+        if 'c_cppcheck'          in scanners: findings.extend(c_cppcheck.run          (tmpdir))
+        if 'go_gosec'            in scanners: findings.extend(go_gosec.run            (tmpdir))
+        if 'js_nodejsscan'       in scanners: findings.extend(js_nodejsscan.run       (tmpdir))
+        if 'py_bandit'           in scanners: findings.extend(py_bandit.run           (tmpdir))
+        if 'py_safety'           in scanners: findings.extend(py_safety.run           (tmpdir))
+        if 'ruby_brakeman'       in scanners: findings.extend(ruby_brakeman.run       (tmpdir))
+        if 'rust_cargoaudit'     in scanners: findings.extend(rust_cargoaudit.run     (tmpdir))
 
     pr.fully_scanned = True
     for f in findings: f.pr_id = pr.pr_id

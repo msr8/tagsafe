@@ -347,6 +347,7 @@ main {
 .repo-details-inner {
     overflow: hidden;
     padding-top: 0;
+    padding-bottom: 2rem;
 }
 .repo-card.expanded .repo-details-inner {
     padding-top: 1rem;
@@ -472,7 +473,7 @@ main {
     gap: 1.5rem;
     font-size: 0.85rem;
     color: var(--text-secondary);
-    margin-bottom: 1rem;
+    /* margin-bottom: 1rem; */
 }
 .commit-meta span {
     display: flex;

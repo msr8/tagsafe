@@ -106,14 +106,20 @@
                                         </a>
                                     </span>
                                 </div>
-                                <div class="commit-meta">
+                                <div class="commit-meta" style="align-items: center;">
                                     <span><i data-lucide="user" width="14" height="14"></i> {{ commit.author }}</span>
                                     <span><i data-lucide="clock" width="14" height="14"></i> {{ commit.timestamp
                                         }}</span>
+                                    {% if not commit.findings %}
+                                    <span class="badge-unscanned" style="margin-left: auto; padding: 3px 10px; border-radius: 6px; background: rgba(255,255,255,0.05); font-size: 0.75rem; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; gap: 6px;">
+                                        <i data-lucide="circle-dashed" width="12" height="12"></i>
+                                        Not scanned
+                                    </span>
+                                    {% endif %}
                                 </div>
 
+                                {% if commit.findings %}
                                 <div class="findings-container">
-                                    {% if commit.findings %}
                                     <div class="findings-list">
                                         {% for finding in commit.findings %}
                                         <div class="finding-item badge-{{ finding.severity|lower }}">
@@ -143,13 +149,8 @@
                                         </div>
                                         {% endfor %}
                                     </div>
-                                    {% else %}
-                                    <div class="finding-badge badge-unscanned">
-                                        <i data-lucide="circle-dashed" width="14" height="14"></i>
-                                        <span>Not scanned</span>
-                                    </div>
-                                    {% endif %}
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}
@@ -173,13 +174,19 @@
                                         </a>
                                     </span>
                                 </div>
-                                <div class="commit-meta">
+                                <div class="commit-meta" style="align-items: center;">
                                     <span><i data-lucide="user" width="14" height="14"></i> {{ pr.author }}</span>
                                     <span><i data-lucide="clock" width="14" height="14"></i> {{ pr.timestamp }}</span>
+                                    {% if not pr.findings %}
+                                    <span class="badge-unscanned" style="margin-left: auto; padding: 3px 10px; border-radius: 6px; background: rgba(255,255,255,0.05); font-size: 0.75rem; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; gap: 6px;">
+                                        <i data-lucide="circle-dashed" width="12" height="12"></i>
+                                        Not scanned
+                                    </span>
+                                    {% endif %}
                                 </div>
 
+                                {% if pr.findings %}
                                 <div class="findings-container">
-                                    {% if pr.findings %}
                                     <div class="findings-list">
                                         {% for finding in pr.findings %}
                                         <div class="finding-item badge-{{ finding.severity|lower }}">
@@ -209,13 +216,8 @@
                                         </div>
                                         {% endfor %}
                                     </div>
-                                    {% else %}
-                                    <div class="finding-badge badge-unscanned">
-                                        <i data-lucide="circle-dashed" width="14" height="14"></i>
-                                        <span>Not scanned</span>
-                                    </div>
-                                    {% endif %}
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}

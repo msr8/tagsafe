@@ -11,6 +11,14 @@ after-authorisation.json
 pr_payload.json
 changed_files.json
 
+*.docx
+*.bkp
+*.zip
+*.tmp
+report*.md
+temp.py
+Brief.pdf
+
 
 
 

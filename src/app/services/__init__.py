@@ -4,6 +4,7 @@ import requests as rq
 
 import smtplib
 from email.message import EmailMessage
+from loguru import logger
 
 
 def email(rec_email, subject, body):
@@ -20,11 +21,11 @@ def email(rec_email, subject, body):
             server.login(msg['From'], GMAIL_APP_PASSWORD)
             # Send the email
             server.send_message(msg)
-            
-        print("Email sent successfully! 🚀")
+            return True 
 
     except Exception as e:
-        print(f"Failed to send email. Error: {e}")
+        logger.error(f'Failed to send email: {e}')
+        return False
     
 
 

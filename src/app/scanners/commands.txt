@@ -1,0 +1,13 @@
+Bandit:     pip install bandit
+Gosec:      go install github.com/securego/gosec/v2/cmd/gosec@latest
+CppCheck:   sudo dnf install cppcheck
+Semgrep:    pip install semgrep
+NodeJSScan: python3.13 -m pip install njsscan
+Gaurddog:   pip install guarddog
+Safety:     pip install safety
+Brakeman:   gem install brakeman
+CargoAudit: cargo install cargo-audit
+Trivy:      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+OWASP DC:   https://owasp.org/www-project-dependency-check/ (Download CLI)
+Gitleaks:   go install github.com/zricethezav/gitleaks/v8@latest
+Yara:       sudo apt install yara && git clone https://github.com/Yara-Rules/rules.git src/app/scanners/yara_rules

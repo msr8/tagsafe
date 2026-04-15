@@ -48,41 +48,41 @@ def get_code_snippet(locs) -> str:
 
 
 def run(repo_path: str) -> list[Finding]:
-    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+    with tempfile.NamedTemporaryFile() as tmp_file:
         output_path = tmp_file.name
-    findings = []
-    out, _, _ = run_cmd(
-        ['cppcheck', '--enable=all', '--output-file=' + output_path, '--output-format=xmlv3', '--quiet', '-suppress=ctuOneDefinitionRuleViolation', '.'],
-        cwd=repo_path,
-    )
-    try:
-        tree = ET.parse(output_path)
-        root = tree.getroot()
-    except Exception:
-        return findings
-
-    for error in root.iter('error'):
-        loc = error.find('location')
-        locs = error.findall('location')
-        severity_raw = error.get('severity', 'information')
-        severity_map = {
-            'error': 'HIGH',
-            'warning': 'MEDIUM',
-            'style': 'LOW',
-            'performance': 'LOW',
-            'portability': 'LOW',
-            'information': 'INFO',
-        }
-
-        f = Finding(
-            tool         = 'cppcheck',
-            rule_id      = error.get('id'),
-            severity     = severity_map.get(severity_raw, 'INFO'),
-            file_path    = (loc.get('file', '') if loc is not None else '').replace(repo_path, '').lstrip('/'),
-            line_start   = int(loc.get('line', 0)) if loc is not None else None,
-            message      = error.get('msg', ''),
-            cwe          = error.get('cwe', ''),
-            code_snippet = get_code_snippet(locs)
+        findings = []
+        out, _, _ = run_cmd(
+            ['cppcheck', '--enable=all', '--output-file=' + output_path, '--output-format=xmlv3', '--quiet', '-suppress=ctuOneDefinitionRuleViolation', '.'],
+            cwd=repo_path,
         )
-        findings.append(f)
-    return findings
+        try:
+            tree = ET.parse(output_path)
+            root = tree.getroot()
+        except Exception:
+            return findings
+
+        for error in root.iter('error'):
+            loc = error.find('location')
+            locs = error.findall('location')
+            severity_raw = error.get('severity', 'information')
+            severity_map = {
+                'error': 'HIGH',
+                'warning': 'MEDIUM',
+                'style': 'LOW',
+                'performance': 'LOW',
+                'portability': 'LOW',
+                'information': 'INFO',
+            }
+
+            f = Finding(
+                tool         = 'cppcheck',
+                rule_id      = error.get('id'),
+                severity     = severity_map.get(severity_raw, 'INFO'),
+                file_path    = (loc.get('file', '') if loc is not None else '').replace(repo_path, '').lstrip('/'),
+                line_start   = int(loc.get('line', 0)) if loc is not None else None,
+                message      = error.get('msg', ''),
+                cwe          = error.get('cwe', ''),
+                code_snippet = get_code_snippet(locs)
+            )
+            findings.append(f)
+        return findings
