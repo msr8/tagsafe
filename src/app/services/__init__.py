@@ -41,5 +41,6 @@ def llm(prompt:str) -> str:
         'stream': False
     }
 
-    resp = rq.post(f'http://localhost:{OLLAMA_PORT}/api/generate', json=payload)
+    ollama_host = environ.get('OLLAMA_HOST', 'localhost')
+    resp = rq.post(f'http://{ollama_host}:{OLLAMA_PORT}/api/generate', json=payload)
     return resp.json()['response']

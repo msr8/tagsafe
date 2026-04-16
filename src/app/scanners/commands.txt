@@ -4,8 +4,8 @@ CppCheck:   sudo dnf install cppcheck
 Semgrep:    pip install semgrep
 NodeJSScan: python3.13 -m pip install njsscan
 Gaurddog:   pip install guarddog
-Safety:     pip install safety
-Brakeman:   gem install brakeman
+Safety:     sudo dnf install libgit2-devel && pip install safety
+Brakeman:   sudo dnf install ruby-devel && gem install brakeman
 CargoAudit: cargo install cargo-audit
 Trivy:      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 OWASP DC:   https://owasp.org/www-project-dependency-check/ (Download CLI)

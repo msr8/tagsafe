@@ -47,12 +47,12 @@ def commit_scan(commit:Commit, token:str, payload:dict) -> tuple[set, list[Findi
                 # Removed this cause safety requires an acc :(
                 # if file == 'requirements.txt': scanners.add('py_safety')
         
-        logger.info(f'Scanners to run based on file extensions: <magenta>{scanners}</magenta>')
+        logger.opt(colors=True).info(f'Scanners to run based on file extensions: <magenta>{scanners}</magenta>')
         findings = []
         if 'all_semgrep'         in scanners: findings.extend(all_semgrep.run         (tmpdir))
         if 'all_yara'            in scanners: findings.extend(all_yara.run            (tmpdir))
         if 'all_trivy'           in scanners: findings.extend(all_trivy.run           (tmpdir))
-        if 'all_dependencycheck' in scanners: findings.extend(all_dependencycheck.run (tmpdir))
+        # if 'all_dependencycheck' in scanners: findings.extend(all_dependencycheck.run (tmpdir))
         if 'all_gitleaks'        in scanners: findings.extend(all_gitleaks.run        (tmpdir))
         if 'c_cppcheck'          in scanners: findings.extend(c_cppcheck.run          (tmpdir))
         if 'go_gosec'            in scanners: findings.extend(go_gosec.run            (tmpdir))

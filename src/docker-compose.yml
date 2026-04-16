@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      # Use the 'ollama' service hostname
+      - OLLAMA_HOST=ollama
+      - OLLAMA_PORT=11434
+    volumes:
+      # Mount the .env file so Github/Google tokens and app secrets are accessible
+      - ./.env:/app/.env
+    depends_on:
+      - ollama
+    # If the app stores sqlite in the instance folder, you might want a volume to persist it:
+    # - ./instance:/app/instance
+  
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Automatically pull the phi-3 model when the container starts
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        # Start Ollama in the background
+        ollama serve &
+        # Sleep for a few seconds to let it initialize
+        sleep 5
+        # Pull the phi-3 model ensuring it's available
+        ollama pull phi3
+        # Keep the container running in the foreground
+        wait
+
+volumes:
+  ollama_data:
