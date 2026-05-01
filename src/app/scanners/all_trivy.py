@@ -33,8 +33,8 @@ def run(repo_path: str) -> list[Finding]:
                     rule_id      = vuln.get('VulnerabilityID', ''),
                     severity     = normalize_severity(vuln.get('Severity', 'MEDIUM')),
                     file_path    = target_file,
-                    message      = f"Vulnerable Package {vuln.get('Title', '')}",
-                    code_snippet = vuln.get('Description', ''),
+                    message      = f"Vulnerable Package {vuln.get('PkgName', '')}=={vuln.get('InstalledVersion', '')}: {vuln.get('Description', '')}",
+                    code_snippet = f"{vuln.get('PkgName', '')}=={vuln.get('InstalledVersion', '')} -> {vuln.get('FixedVersion', '')}",
                 )
                 findings.append(f)
                 
@@ -48,6 +48,18 @@ def run(repo_path: str) -> list[Finding]:
                     file_path    = target_file,
                     message      = misconf.get('Title', misconf.get('Message', '')),
                     code_snippet = misconf.get('Description', ''),
+                )
+                findings.append(f)
+            
+            # Parse Secrets
+            for secret in result.get('Secrets', []):
+                f = Finding(
+                    tool         = 'trivy',
+                    rule_id      = secret.get('RuleID', ''),
+                    severity     = normalize_severity(secret.get('Severity', 'MEDIUM')),
+                    file_path    = target_file,
+                    message      = secret.get('Title', secret.get('Message', '')),
+                    code_snippet = secret.get('Match', ''),
                 )
                 findings.append(f)
 

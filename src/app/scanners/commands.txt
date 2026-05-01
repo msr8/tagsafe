@@ -9,5 +9,5 @@ Brakeman:   sudo dnf install ruby-devel && gem install brakeman
 CargoAudit: cargo install cargo-audit
 Trivy:      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 OWASP DC:   https://owasp.org/www-project-dependency-check/ (Download CLI)
-Gitleaks:   go install github.com/zricethezav/gitleaks/v8@latest
+Gitleaks:   go install github.com/zricethezav/gitleaks/v8@latest # or sudo dnf install gitleaks
 Yara:       sudo apt install yara && git clone https://github.com/Yara-Rules/rules.git src/app/scanners/yara_rules

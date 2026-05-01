@@ -147,7 +147,7 @@ def github_webhook():
         filtered_findings = [f for f in findings if severity_map.get(f.severity, 0) >= severity]
         if filtered_findings:
             llm_prompt = PROMPT.format(
-                scanners=', '.join(scanners),
+                mode = 'commit',
                 findings=dumps([f.to_dict() for f in filtered_findings], indent=4)
             )
 
@@ -236,7 +236,7 @@ def github_webhook():
             import time
             start = time.time()
             llm_prompt = PROMPT.format(
-                scanners=', '.join(scanners),
+                mode = 'pull request',
                 findings=dumps([f.to_dict() for f in findings], indent=4)
             )
             logger.info(f'Generating LLM summary for the findings... (PR: {payload["pull_request"]["number"]})')

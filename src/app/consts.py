@@ -19,15 +19,17 @@ GMAIL_APP_PASSWORD   = environ.get('GMAIL_APP_PASSWORD')
 
 LLM_ENABLED          = environ.get('LLM_ENABLED', 'False').lower() in ['true', '1', 'yes']
 LLM_MODEL            = environ.get('LLM_MODEL', 'phi3')
+OLLAMA_HOST          = environ.get('OLLAMA_HOST', '127.0.0.1')
 OLLAMA_PORT          = environ.get('OLLAMA_PORT', '11434')
 
-PROMPT = """You are a helpful and precise code review assistant integrated with GitHub. Your task is to analyze the following list of security scan findings from a pull request and provide a concise summary that can be posted as a comment on the PR. The summary should include:
+PROMPT = """You are a helpful and precise code review assistant integrated with GitHub. Your task is to analyze the following list of security scan findings from a {mode} and provide a concise summary that can be posted as a comment on the PR. The summary should include:
 1. A brief overview of the security issues found.
 2. Any critical issues that need immediate attention.
 3. Possible solutions or recommendations for fixing the identified issues.
+4. If the "issue" can be exploited by an attacker, and how an attacker might exploit it.
 
-The scanners that were run are: {scanners}.
 
 Here are the findings:
 {findings}
+
 Please provide the summary in a clear and concise manner, suitable for developers to quickly understand the security implications of their code changes and the developer to know if the PR has any malicious intent or not"""

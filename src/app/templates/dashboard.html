@@ -132,8 +132,9 @@
                                             </div>
                                             <div class="finding-details-wrapper" id="find-{{ finding.id }}">
                                                 <div class="finding-details-inner">
-                                                    <strong>File:</strong> <code>{{ finding.file_path }}</code> (Line {{
-                                                    finding.line_start }})<br>
+                                                    
+                                                    <strong>File:</strong> <code>{{ finding.file_path }}</code> {% if finding.line_start %}(Line {{ finding.line_start }}){% endif %}<br>
+                                                    
                                                     {% if finding.cwe %}<strong>CWE:</strong> <a
                                                         href="https://cwe.mitre.org/data/definitions/{{ finding.cwe.split('-')[-1] }}.html"
                                                         target="_blank" style="color: var(--accent-color);">{{
@@ -199,8 +200,7 @@
                                             </div>
                                             <div class="finding-details-wrapper" id="find-{{ finding.id }}">
                                                 <div class="finding-details-inner">
-                                                    <strong>File:</strong> <code>{{ finding.file_path }}</code> (Line {{
-                                                    finding.line_start }})<br>
+                                                    <strong>File:</strong> <code>{{ finding.file_path }}</code> {% if finding.line_start %}(Line {{ finding.line_start }}){% endif %}<br>
                                                     {% if finding.cwe %}<strong>CWE:</strong> <a
                                                         href="https://cwe.mitre.org/data/definitions/{{ finding.cwe.split('-')[-1] }}.html"
                                                         target="_blank" style="color: var(--accent-color);">{{

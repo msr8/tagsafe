@@ -1,4 +1,4 @@
-from app.consts import MY_EMAIL, GMAIL_APP_PASSWORD, LLM_ENABLED, LLM_MODEL, OLLAMA_PORT
+from app.consts import MY_EMAIL, GMAIL_APP_PASSWORD, LLM_ENABLED, LLM_MODEL, OLLAMA_HOST, OLLAMA_PORT
 
 import requests as rq
 
@@ -41,6 +41,5 @@ def llm(prompt:str) -> str:
         'stream': False
     }
 
-    ollama_host = environ.get('OLLAMA_HOST', 'localhost')
-    resp = rq.post(f'http://{ollama_host}:{OLLAMA_PORT}/api/generate', json=payload)
+    resp = rq.post(f'http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/generate', json=payload)
     return resp.json()['response']
