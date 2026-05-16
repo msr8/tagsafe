@@ -6,11 +6,6 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/msr8/tagsafe?color=7F4995&labelColor=302D41&style=for-the-badge)](https://github.com/msr8/tagsafe/commits/main)
 [![GitHub issues](https://img.shields.io/github/issues/msr8/tagsafe?color=066DA5&labelColor=302D41&style=for-the-badge)](https://github.com/msr8/tagsafe/issues)
 
-<br>
-
-<h1>TagSafe</h1>
-<p><em>Automated security scanning, natively integrated into your GitHub workflow</em></p>
-
 </div>
 
 <br>
@@ -39,7 +34,7 @@
 
 **Problem Statement:** Modern software development pipelines lack integrated, real-time static analysis security testing (SAST) at the repository level. Developers often discover vulnerabilities only after code has already been merged, making remediation costly and time-consuming. Existing tools are fragmented, requiring manual invocation and expert knowledge to interpret results
 
-**Purpose and Contribution:** TagSafe is a self-hosted, GitHub-native automated security scanning platform that hooks directly into repository events — commits and pull requests — to automatically scan code using multiple industry-standard SAST tools. It provides unified findings via a dashboard, inline PR comments with LLM-generated summaries, and configurable email alerts, all without changing the developer's existing workflow
+**Purpose and Contribution:** TagSafe is a self-hosted, GitHub-native automated security scanning platform that hooks directly into repository events, ie commits and pull requests, to automatically scan code using multiple industry-standard SAST tools. It provides unified findings via a dashboard, inline PR comments with LLM-generated summaries, and configurable email alerts, all without changing the developer's existing workflow
 
 **Methods and Approach:** TagSafe runs as a Flask application that registers a GitHub App to receive webhook events. On each push or pull request, it clones the repository (or downloads changed files for PRs), detects the languages present, and dispatches the appropriate scanners. Results are normalised, persisted in SQLite via SQLAlchemy, and surfaced through a glassmorphic web dashboard. A locally-hosted LLM (Phi-3 via Ollama) optionally synthesises findings into a concise PR comment
 
@@ -50,8 +45,8 @@
 1. **GitHub-Native Integration:** registers as a GitHub App; receives push and PR webhooks automatically
 2. **Multi-Language SAST:** orchestrates 10+ scanners across Python, Go, JavaScript, C/C++, Ruby, Rust, and more
 3. **LLM-Powered Summaries:** uses a locally-hosted Phi-3 model to generate human-readable security summaries posted as PR comments
-4. **Unified Dashboard:** glassmorphic web UI showing findings per-repo, per-commit, and per-PR with severity colour coding
-5. **Email Alerting:** configurable per-user severity threshold; sends HTML email reports with AI summary and findings table
+4. **Unified Dashboard:** Web UI showing findings per-repo, per-commit, and per-PR
+5. **Email Alerting:** Configurable per-user severity threshold; sends HTML email reports with AI summary and findings table
 6. **Secret Detection:** Gitleaks and Trivy scan for hardcoded secrets and credentials across every push
 7. **Malware Signatures:** YARA rules scan for known malicious code patterns
 8. **Fully Self-Hosted:** No data leaves your infrastructure; LLM runs locally via Ollama
@@ -60,21 +55,16 @@
 
 ### Tech Stack
 
-1. **Backend & Framework**
-   - **Python (Flask):** Core web framework and webhook handler
-   - **Flask-Dance:** GitHub OAuth 2.0 authentication
-   - **Flask-SQLAlchemy + SQLite:** ORM and database for findings, commits, PRs, and users
-   - **Flask-Session:** Server-side session management
-   - **GitPython:** Clones repositories for full-commit scanning
-2. **Security Scanners**
-   - Language-specific and general-purpose SAST tools (see [Supported Scanners](#supported-scanners))
-3. **AI / LLM**
-   - **Ollama (Phi-3):** Local LLM for generating findings summaries; no external API calls
-4. **Infrastructure**
-   - **Docker + Docker Compose:** Containerised deployment of the Flask app and Ollama service
-5. **Frontend**
-   - **HTML5 / CSS3 / JavaScript:** Custom glassmorphic dashboard
-   - **Lucide Icons + Toastify + PrismJS:** UI libraries for icons, notifications, and code highlighting
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| Backend Framework | Flask | HTTP request handling, routing, session management |
+| ORM/Database | SQLAlchemy + SQLite | Data modelling, persistence |
+| Authentication | Flask-Dance | User login via GitHub OAuth 2.0 |
+| LLM Runtime | Ollama (Phi-3) | Local Offline Inference |
+| Scanners | Dependency Check, Gitleaks, Semgrep, Trivy, YARA, Cppcheck, Gosec, Nodejs-scan, Bandit, Brakeman, Cargo-Audit | Static analysis across multiple languages |
+| Email | Smtplib (SMTP over SSL) | Security alert delivery |
+| Frontend | HTML/CSS/JS, PrismJS, Toastify, Lucide | Interactive dashboard, syntax highlighting |
+| Logging | Loguru | Structured, coloured console and file logging |
 
 <br>
 
@@ -131,9 +121,9 @@ The database consists of five tables with the following relationships:
 
 # Usage
 
-### Running via Docker
+<!-- ### Running via Docker
 
-<!-- **Pre-requisites:** [Docker Engine](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/) must be installed and running. You will also need a GitHub App configured (see [GitHub App Setup](#github-app-setup)).
+**Pre-requisites:** [Docker Engine](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/) must be installed and running. You will also need a GitHub App configured (see [GitHub App Setup](#github-app-setup)).
 
 ```bash
 # Clone the repository
