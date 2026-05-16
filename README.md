@@ -57,14 +57,14 @@
 
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
-| Backend Framework | Flask | HTTP request handling, routing, session management |
-| ORM/Database | SQLAlchemy + SQLite | Data modelling, persistence |
-| Authentication | Flask-Dance | User login via GitHub OAuth 2.0 |
-| LLM Runtime | Ollama (Phi-3) | Local Offline Inference |
-| Scanners | Dependency Check, Gitleaks, Semgrep, Trivy, YARA, Cppcheck, Gosec, Nodejs-scan, Bandit, Brakeman, Cargo-Audit | Static analysis across multiple languages |
-| Email | Smtplib (SMTP over SSL) | Security alert delivery |
-| Frontend | HTML/CSS/JS, PrismJS, Toastify, Lucide | Interactive dashboard, syntax highlighting |
-| Logging | Loguru | Structured, coloured console and file logging |
+| **Backend Framework** | Flask | HTTP request handling, routing, session management |
+| **ORM/Database** | SQLAlchemy + SQLite | Data modelling, persistence |
+| **Authentication** | Flask-Dance | User login via GitHub OAuth 2.0 |
+| **LLM Runtime** | Ollama (Phi-3) | Local Offline Inference |
+| **Scanners** | Dependency Check, Gitleaks, Semgrep, Trivy, YARA, Cppcheck, Gosec, Nodejs-scan, Bandit, Brakeman, Cargo-Audit | Static analysis across multiple languages |
+| **Email** | Smtplib (SMTP over SSL) | Security alert delivery |
+| **Frontend** | HTML/CSS/JS, PrismJS, Toastify, Lucide | Interactive dashboard, syntax highlighting |
+| **Logging** | Loguru | Structured, coloured console and file logging |
 
 <br>
 
