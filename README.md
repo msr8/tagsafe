@@ -95,39 +95,32 @@
 <div align="center">
 
 ![Dashboard.png](screenshots/1.png)
-Figure 1: Main Dashboard View<br>
 This screenshot displays the primary user dashboard where users can manage their linked repositories and configure their security preference
-<br>
+<br><br>
 
 ![2.png](screenshots/2.png)
-Figure 2: Expanded Timeline in Dashboard<br>
 This view illustrates the expanded dashboard for a specific repository (ie `msr8/my-project`), showing active tabs for "Commits" and "Pull Requests"
-<br>
+<br><br>
 
 ![3.png](screenshots/3.png)
-Figure 3: Repositories Access Configuration
 This screenshot captures the GitHub account settings page where the user configures permissions for granted to our bot. The user can grant access to all repositories or selected repositories
-<br>
+<br><br>
 
 ![4.png](screenshots/4.png)
-Figure 4: Commit Findings<br>
 The screenshot shows the finding associated with the commit `e2c9d87`. It shows 2 main vulnerabilities which can be consequential:
 - **Exposed AWS Key:** The user accidently commited and pushed a sensitive API key, which can lead to confidential information leakage or misuse
 - **Insecure Deserialization - Possible RCE:** The user is using the `pickle.loads` function on user input, which can be used to run malicious code
-<br>
+<br><br>
 
 ![5.png](screenshots/5.png)
-Figure 5: Mail sent to the user<br>
 This screenshot displays the email sent to the user telling the details about the findings in the latest commit
-<br>
+<br><br>
 
 ![6.png](screenshots/6.png)
-Figure 6: PR Findings<br>
 This screenshot shows the findings of a Pull Request created by another user, and highlights a critical vulnerability finding related to the PYYAML 5.3.1 package, which is susceptible to arbitrary code execution
-<br>
+<br><br>
 
 ![7.png](screenshots/7.png)
-Figure 7: Comment posted by the bot on the PR<br>
 This screenshot showcases the system's integration with GitHub, displaying an automated comment posted directly to the Pull Request
 
 
